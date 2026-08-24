@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mahjong Tai Counter</title>
+<style>
+/* ===================== RESET & ROOT ===================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --accent: #c0392b;
+  --accent-dark: #a93226;
+  --accent-light: #fdf0ef;
+  --text: #1c1c1e;
+  --text-sec: #6c6c70;
+  --border: #e5e5ea;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  --radius: 14px;
+  --radius-sm: 9px;
+  /* suit colours */
+  --bam-bg:#e8f5e9; --bam-fg:#2e7d32;
+  --wan-bg:#fde8e8; --wan-fg:#c62828;
+  --pin-bg:#e3f2fd; --pin-fg:#1565c0;
+  --wind-bg:#f3e5f5; --wind-fg:#6a1b9a;
+  --drag-red-bg:#fde8e8; --drag-red-fg:#c62828;
+  --drag-grn-bg:#e8f5e9; --drag-grn-fg:#2e7d32;
+  --drag-wht-bg:#f5f5f5; --drag-wht-fg:#546e7a;
+  --flower-bg:#fce4ec; --flower-fg:#ad1457;
+  --animal-bg:#e0f7fa; --animal-fg:#00695c;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 32px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===================== HEADER ===================== */
+.header {
+  background: var(--accent);
+  color: #fff;
+  padding: 14px 20px 12px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(192,57,43,0.35);
+}
+.header h1 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+.header p  { font-size: 12px; opacity: .8; margin-top: 1px; }
+
+/* ===================== CONTAINER ===================== */
+.wrap { max-width: 480px; margin: 0 auto; padding: 14px 14px 0; }
+
+/* ===================== CARD ===================== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.card-label {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .9px;
+  color: var(--text-sec); margin-bottom: 12px;
+}
+
+/* ===================== TOGGLE ===================== */
+.row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; }
+.row + .row { border-top: 1px solid var(--border); }
+.row-text {}
+.row-title { font-size: 14px; font-weight: 500; }
+.row-sub   { font-size: 12px; color: var(--text-sec); margin-top: 1px; }
+.sw { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+.sw input { opacity: 0; width: 0; height: 0; }
+.sw-track {
+  position: absolute; inset: 0;
+  background: #d1d1d6; border-radius: 26px; cursor: pointer;
+  transition: background .2s;
+}
+.sw-track::after {
+  content: '';
+  position: absolute; width: 20px; height: 20px;
+  background: #fff; border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+.sw input:checked ~ .sw-track { background: var(--accent); }
+.sw input:checked ~ .sw-track::after { transform: translateX(18px); }
+
+/* ===================== WIND SELECTOR ===================== */
+.wind-row { display: flex; gap: 7px; margin-top: 6px; }
+.wind-btn {
+  flex: 1; border: 1.5px solid var(--border); border-radius: 10px;
+  background: #fff; cursor: pointer; padding: 8px 4px;
+  text-align: center; transition: all .15s; color: var(--text-sec);
+}
+.wind-btn .wc { display: block; font-size: 18px; font-weight: 700; }
+.wind-btn .wn { display: block; font-size: 10px; margin-top: 1px; }
+.wind-btn:hover { border-color: var(--accent); color: var(--accent); }
+.wind-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ===================== LIMIT INPUT ===================== */
+.limit-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; margin-top: 2px; border-top: 1px solid var(--border);
+}
+.limit-input {
+  width: 58px; padding: 6px 8px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 15px; font-weight: 700; text-align: center; color: var(--accent);
+}
+.limit-input:focus { outline: none; border-color: var(--accent); }
+
+/* ===================== CHIPS ===================== */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 7px 13px; border: 1.5px solid var(--border);
+  border-radius: 100px; background: #fff; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--text-sec);
+  transition: all .15s; user-select: none;
+}
+.chip.on { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+/* ===================== HAND MODE ===================== */
+.modes { display: flex; gap: 7px; margin-bottom: 13px; }
+.mode-btn {
+  flex: 1; padding: 9px 6px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  background: #fff; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: var(--text-sec);
+  text-align: center; transition: all .15s;
+}
+.mode-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ===================== SET DISPLAY ===================== */
+.sets-list { display: flex; flex-direction: column; gap: 8px; }
+.set-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; background: var(--bg); border-radius: 10px;
+  border: 1.5px solid var(--border);
+}
+.set-row.filled { background: #fafafa; border-color: #e0e0e0; }
+.set-badge {
+  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--text-sec);
+  min-width: 34px;
+}
+.tiles-wrap { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+.del-btn {
+  width: 22px; height: 22px; border: none; background: none;
+  cursor: pointer; color: #ccc; font-size: 14px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: all .15s; flex-shrink: 0;
+}
+.del-btn:hover { background: #fee; color: var(--accent); }
+.empty-hint {
+  text-align: center; font-size: 13px; color: #bbb;
+  padding: 12px; border: 1.5px dashed #e0e0e0; border-radius: 10px;
+}
+
+/* ===================== ADD BUTTONS ===================== */
+.add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.add-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 8px; border: 1.5px dashed var(--border); border-radius: 10px;
+  background: #fff; cursor: pointer; font-size: 13px; font-weight: 500;
+  color: var(--text-sec); transition: all .15s;
+}
+.add-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.add-btn:disabled { opacity: .35; cursor: not-allowed; }
+.add-full { grid-column: span 2; }
+
+/* ===================== TILE ===================== */
+.tile {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  width: 34px; height: 44px;
+  border-radius: 5px; font-weight: 800;
+  box-shadow: 0 2px 4px rgba(0,0,0,.12), inset 0 -2px 0 rgba(0,0,0,.1);
+  user-select: none; cursor: default; flex-shrink: 0;
+  transition: transform .1s;
+}
+.tile .tn { font-size: 14px; line-height: 1; }
+.tile .ts { font-size: 10px; line-height: 1; margin-top: 1px; }
+.tile.click { cursor: pointer; }
+.tile.click:hover { transform: translateY(-3px) scale(1.05); }
+.tile.click:active { transform: scale(.97); }
+.tile.sel { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+.tile.dim { opacity: .3; cursor: not-allowed; pointer-events: none; }
+/* suit classes */
+.t-bam { background: var(--bam-bg); color: var(--bam-fg); }
+.t-wan { background: var(--wan-bg); color: var(--wan-fg); }
+.t-pin { background: var(--pin-bg); color: var(--pin-fg); }
+.t-wind { background: var(--wind-bg); color: var(--wind-fg); }
+.t-dred { background: var(--drag-red-bg); color: var(--drag-red-fg); }
+.t-dgrn { background: var(--drag-grn-bg); color: var(--drag-grn-fg); }
+.t-dwht { background: var(--drag-wht-bg); color: var(--drag-wht-fg); border: 1px solid #d0d0d0; }
+.t-flower { background: var(--flower-bg); color: var(--flower-fg); }
+.t-animal { background: var(--animal-bg); color: var(--animal-fg); }
+
+/* ===================== BONUS TILES ===================== */
+.bonus-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.bonus-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border: 1.5px solid var(--border);
+  border-radius: 10px; cursor: pointer; background: #fff;
+  transition: all .15s;
+}
+.bonus-chip.on { border-color: var(--accent); background: var(--accent-light); }
+.bonus-chip .bc-name { font-size: 12px; font-weight: 600; }
+.bonus-chip .bc-sub  { font-size: 10px; color: var(--text-sec); margin-top: 1px; }
+
+/* ===================== CALC BUTTON ===================== */
+.calc-btn {
+  width: 100%; padding: 15px; border: none; border-radius: var(--radius);
+  background: var(--accent); color: #fff;
+  font-size: 16px; font-weight: 700; letter-spacing: .3px;
+  cursor: pointer; transition: background .15s, transform .1s;
+  box-shadow: 0 4px 14px rgba(192,57,43,.3);
+  margin-bottom: 12px;
+}
+.calc-btn:hover { background: var(--accent-dark); }
+.calc-btn:active { transform: scale(.99); }
+
+/* ===================== RESULTS ===================== */
+.results {
+  background: var(--card); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 2px solid var(--accent);
+}
+.result-total { text-align: center; margin-bottom: 18px; }
+.result-num {
+  font-size: 72px; font-weight: 900; color: var(--accent);
+  line-height: 1; font-variant-numeric: tabular-nums;
+}
+.result-unit { font-size: 16px; color: var(--text-sec); margin-top: 4px; }
+.result-limit { font-size: 17px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.breakdown { display: flex; flex-direction: column; gap: 6px; }
+.b-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-radius: 8px; background: var(--bg);
+  font-size: 13px;
+}
+.b-item.b-limit { background: var(--accent-light); }
+.b-name { font-weight: 500; }
+.b-tai  { font-weight: 800; color: var(--accent); min-width: 32px; text-align: right; }
+.b-div  { height: 1px; background: var(--border); margin: 4px 0; }
+.b-total-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-radius: 8px;
+  background: var(--accent); color: #fff;
+  font-size: 14px; font-weight: 700;
+}
+
+/* ===================== ERROR / INFO ===================== */
+.msg {
+  padding: 12px 14px; border-radius: 10px;
+  font-size: 13px; margin-bottom: 12px;
+}
+.msg.warn { background: #fff8e1; border: 1px solid #ffd54f; color: #7a5800; }
+.msg.info { background: var(--accent-light); border: 1px solid var(--accent); color: var(--accent-dark); }
+
+/* ===================== RESET BTN ===================== */
+.reset-btn {
+  width: 100%; padding: 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius); background: #fff; cursor: pointer;
+  font-size: 14px; font-weight: 500; color: var(--text-sec);
+  transition: all .15s;
+}
+.reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ===================== USAGE COUNTER ===================== */
+.usage-bar {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px; margin-top: 8px;
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.usage-icon { font-size: 18px; }
+.usage-text { font-size: 13px; color: var(--text-sec); }
+.usage-count {
+  font-size: 15px; font-weight: 800; color: var(--accent);
+  min-width: 28px; text-align: center;
+}
+.usage-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #4caf50; flex-shrink: 0;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .5; transform: scale(.8); }
+}
+
+/* ===================== MODAL ===================== */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 300; display: flex; align-items: flex-end; justify-content: center;
+}
+.overlay.hide { display: none; }
+.modal {
+  background: #fff; border-radius: 20px 20px 0 0;
+  padding: 20px 16px 32px; width: 100%; max-width: 480px;
+  max-height: 88vh; overflow-y: auto;
+  animation: slideUp .22s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.modal-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 4px;
+}
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-hint  { font-size: 12px; color: var(--text-sec); margin-top: 3px; }
+.modal-x {
+  width: 30px; height: 30px; border: none; background: var(--bg);
+  border-radius: 50%; cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sect-lbl {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--text-sec);
+  margin: 14px 0 8px;
+}
+.tile-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+.tile-grid .tile { width: 42px; height: 54px; }
+.tile-grid .tile .tn { font-size: 15px; }
+.tile-grid .tile .ts { font-size: 11px; }
+.chow-preview {
+  display: flex; gap: 5px; align-items: center;
+  background: var(--accent-light); border-radius: 10px;
+  padding: 10px 12px; margin: 10px 0 4px;
+}
+.chow-preview-lbl { font-size: 12px; color: var(--accent); font-weight: 600; margin-right: 4px; }
+.modal-ok {
+  width: 100%; padding: 13px; border: none; border-radius: 11px;
+  background: var(--accent); color: #fff;
+  font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px;
+  transition: background .15s;
+}
+.modal-ok:disabled { background: #ccc; cursor: not-allowed; }
+.modal-ok:not(:disabled):hover { background: var(--accent-dark); }
+
+/* ===================== 13 WONDERS INFO ===================== */
+.wonders-info {
+  background: var(--accent-light); border-radius: 10px;
+  padding: 16px; text-align: center; color: var(--accent-dark);
+}
+.wonders-info .wi-icon { font-size: 28px; margin-bottom: 8px; }
+.wonders-info .wi-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.wonders-info .wi-body { font-size: 12px; line-height: 1.6; }
+.wonders-info .wi-limit { font-size: 13px; font-weight: 700; margin-top: 10px; }
+
+/* ===================== RESPONSIVE ===================== */
+@media (min-width: 480px) {
+  .wrap { padding: 16px 0 0; }
+  .overlay { align-items: center; }
+  .modal { border-radius: 18px; margin-bottom: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🀄 Mahjong Tai Counter</h1>
+  <p>Singapore Style</p>
+</div>
+
+<div class="wrap">
+
+  <!-- ══════════════ SETTINGS ══════════════ -->
+  <div class="card">
+    <div class="card-label">Settings</div>
+
+    <div class="row">
+      <div class="row-text">
+        <div class="row-title">🌸 Flowers &amp; Seasons</div>
+        <div class="row-sub">Flower and season bonus tiles</div>
+      </div>
+      <label class="sw">
+        <input type="checkbox" id="sw-flowers" checked>
+        <span class="sw-track"></span>
+      </label>
+    </div>
+
+    <div class="row">
+      <div class="row-text">
+        <div class="row-title">🐱 Animals</div>
+        <div class="row-sub">Cat, Rat, Cockerel, Centipede</div>
+      </div>
+      <label class="sw">
+        <input type="checkbox" id="sw-animals" checked>
+        <span class="sw-track"></span>
+      </label>
+    </div>
+
+    <div class="limit-row">
+      <div class="row-text">
+        <div class="row-title">Limit Hand Maximum</div>
+        <div class="row-sub">Tai paid for limit hands</div>
+      </div>
+      <input type="number" class="limit-input" id="limit-max" value="8" min="1" max="30">
+    </div>
+
+    <!-- Seat wind -->
+    <div style="margin-top:14px">
+      <div class="card-label" style="margin-bottom:6px">Your Seat Wind</div>
+      <div class="wind-row" id="seat-row">
+        <button class="wind-btn on" data-w="East"  onclick="setSeat(this)"><span class="wc">東</span><span class="wn">East</span></button>
+        <button class="wind-btn"    data-w="South" onclick="setSeat(this)"><span class="wc">南</span><span class="wn">South</span></button>
+        <button class="wind-btn"    data-w="West"  onclick="setSeat(this)"><span class="wc">西</span><span class="wn">West</span></button>
+        <button class="wind-btn"    data-w="North" onclick="setSeat(this)"><span class="wc">北</span><span class="wn">North</span></button>
+      </div>
+    </div>
+
+    <!-- Round wind -->
+    <div style="margin-top:12px">
+      <div class="card-label" style="margin-bottom:6px">Prevailing Wind (Round)</div>
+      <div class="wind-row" id="round-row">
+        <button class="wind-btn on" data-w="East"  onclick="setRound(this)"><span class="wc">東</span><span class="wn">East</span></button>
+        <button class="wind-btn"    data-w="South" onclick="setRound(this)"><span class="wc">南</span><span class="wn">South</span></button>
+        <button class="wind-btn"    data-w="West"  onclick="setRound(this)"><span class="wc">西</span><span class="wn">West</span></button>
+        <button class="wind-btn"    data-w="North" onclick="setRound(this)"><span class="wc">北</span><span class="wn">North</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ WIN TYPE ══════════════ -->
+  <div class="card">
+    <div class="card-label">How Did You Win?</div>
+    <div class="chips">
+      <button class="chip"    id="c-discard"     onclick="toggleWin('discard')">🀆 Discard</button>
+      <button class="chip on" id="c-selfDraw"    onclick="toggleWin('selfDraw')">🎴 Self-Draw</button>
+      <button class="chip"    id="c-lastTile"    onclick="toggleWin('lastTile')">🔚 Last Tile</button>
+      <button class="chip"    id="c-kongReplace" onclick="toggleWin('kongReplace')">🔄 Kong Replace</button>
+      <button class="chip"    id="c-robKong"     onclick="toggleWin('robKong')">⚡ Rob Kong</button>
+      <button class="chip"    id="c-heavenly"    onclick="toggleWin('heavenly')">☀️ Heavenly Win</button>
+      <button class="chip"    id="c-earthly"     onclick="toggleWin('earthly')">🌙 Earthly Win</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ HAND BUILDER ══════════════ -->
+  <div class="card">
+    <div class="card-label">Your Winning Hand</div>
+
+    <!-- Mode buttons -->
+    <div class="modes">
+      <button class="mode-btn on" id="m-standard"  onclick="setMode('standard')">Standard</button>
+      <button class="mode-btn"    id="m-pairs"      onclick="setMode('pairs')">7 Pairs</button>
+      <button class="mode-btn"    id="m-thirteen"   onclick="setMode('thirteen')">13 Wonders</button>
+    </div>
+
+    <!-- Standard hand -->
+    <div id="hand-standard">
+      <div class="sets-list" id="sets-list"></div>
+      <div class="add-grid">
+        <button class="add-btn" id="btn-pong" onclick="openPicker('pong')">✊ Add Pong</button>
+        <button class="add-btn" id="btn-kong" onclick="openPicker('kong')">✋ Add Kong</button>
+        <button class="add-btn" id="btn-chow" onclick="openPicker('chow')">➡️ Add Chow</button>
+        <button class="add-btn" id="btn-pair" onclick="openPicker('pair')">👥 Add Pair</button>
+      </div>
+    </div>
+
+    <!-- Seven pairs hand -->
+    <div id="hand-pairs" style="display:none">
+      <div class="sets-list" id="pairs-list"></div>
+      <button class="add-btn add-full" id="btn-pair7" onclick="openPicker('pair7')" style="margin-top:10px">
+        👥 Add Pair &nbsp;<span id="pair7-count" style="font-size:11px;opacity:.7">(0 / 7)</span>
+      </button>
+    </div>
+
+    <!-- Thirteen wonders -->
+    <div id="hand-thirteen" style="display:none">
+      <div class="wonders-info">
+        <div class="wi-icon">⚡</div>
+        <div class="wi-title">Thirteen Wonders (十三幺)</div>
+        <div class="wi-body">
+          One each of: 1 &amp; 9 Bamboo, 1 &amp; 9 Characters, 1 &amp; 9 Circles,
+          East, South, West, North, Red Dragon, Green Dragon, White Dragon
+          — plus one duplicate tile as the pair.
+        </div>
+        <div class="wi-limit">⚡ This is a Limit Hand — press Count Tai below</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ BONUS TILES ══════════════ -->
+  <div class="card" id="bonus-card">
+    <div class="card-label">Bonus Tiles</div>
+
+    <div id="sec-flowers">
+      <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:8px">
+        🌸 Flowers &amp; Seasons &nbsp;<span style="font-weight:400;font-size:10px">★ = matches your seat</span>
+      </div>
+      <div class="bonus-group" id="flowers-grid"></div>
+    </div>
+
+    <div id="sec-animals" style="margin-top:13px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:8px">
+        🐱 Animals
+      </div>
+      <div class="bonus-group" id="animals-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CALCULATE ══════════════ -->
+  <button class="calc-btn" onclick="calculate()">Count Tai →</button>
+
+  <!-- Results injected here -->
+  <div id="results-area"></div>
+
+  <button class="reset-btn" onclick="resetAll()">↺ Reset Hand</button>
+
+  <!-- Usage counter -->
+  <div class="usage-bar">
+    <span class="usage-icon">🀄</span>
+    <span class="usage-text">Times counted:</span>
+    <span class="usage-count" id="usage-count">—</span>
+    <span class="usage-dot" id="usage-dot" style="background:#ccc"></span>
+  </div>
+  <div style="height:16px"></div>
+
+</div><!-- /wrap -->
+
+<!-- ══════════════ MODAL ══════════════ -->
+<div class="overlay hide" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="modal-title">Pick a Tile</div>
+        <div class="modal-hint"  id="modal-hint"></div>
+      </div>
+      <button class="modal-x" onclick="closePicker()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+    <button class="modal-ok" id="modal-ok" onclick="confirmPick()" disabled>Confirm</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+
+const SUITS = {
+  Bam: { label: 'Bamboo',     ch: '竹', cls: 't-bam' },
+  Wan: { label: 'Characters', ch: '萬', cls: 't-wan' },
+  Pin: { label: 'Circles',    ch: '餅', cls: 't-pin' },
+};
+
+const WINDS = ['East','South','West','North'];
+const WIND_CH = { East:'東', South:'南', West:'西', North:'北' };
+
+const DRAGONS = [
+  { name:'Red',   ch:'中', cls:'t-dred' },
+  { name:'Green', ch:'發', cls:'t-dgrn' },
+  { name:'White', ch:'白', cls:'t-dwht' },
+];
+
+const FLOWERS = [
+  { id:'f1', name:'Plum',         ch:'梅', seat:'East',  kind:'flower' },
+  { id:'f2', name:'Orchid',       ch:'蘭', seat:'South', kind:'flower' },
+  { id:'f3', name:'Chrysanth.',   ch:'菊', seat:'West',  kind:'flower' },
+  { id:'f4', name:'Bamboo Fl.',   ch:'竹', seat:'North', kind:'flower' },
+  { id:'s1', name:'Spring',       ch:'春', seat:'East',  kind:'season' },
+  { id:'s2', name:'Summer',       ch:'夏', seat:'South', kind:'season' },
+  { id:'s3', name:'Autumn',       ch:'秋', seat:'West',  kind:'season' },
+  { id:'s4', name:'Winter',       ch:'冬', seat:'North', kind:'season' },
+];
+
+const ANIMALS = [
+  { id:'a1', name:'Cat',       em:'🐱' },
+  { id:'a2', name:'Rat',       em:'🐭' },
+  { id:'a3', name:'Cockerel',  em:'🐓' },
+  { id:'a4', name:'Centipede', em:'🐛' },
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const S = {
+  useFlowers: true,
+  useAnimals: true,
+  limitMax:   8,
+  seat:       'East',
+  round:      'East',
+
+  win: {
+    selfDraw:    true,
+    discard:     false,
+    lastTile:    false,
+    kongReplace: false,
+    robKong:     false,
+    heavenly:    false,
+    earthly:     false,
+  },
+
+  mode:   'standard', // standard | pairs | thirteen
+  sets:   [],         // [{type:'pong'|'kong'|'chow', tile:{...}}]
+  pair:   null,       // {tile:{...}}
+  pairs7: [],         // [{tile:{...}}]
+
+  flowers: new Set(),
+  animals: new Set(),
+};
+
+/* active picker */
+let picker = { type: null, tile: null };
+
+/* ============================================================
+   SETTINGS LISTENERS
+   ============================================================ */
+document.getElementById('sw-flowers').addEventListener('change', e => {
+  S.useFlowers = e.target.checked;
+  renderBonus();
+  syncBonusCard();
+});
+document.getElementById('sw-animals').addEventListener('change', e => {
+  S.useAnimals = e.target.checked;
+  renderBonus();
+  syncBonusCard();
+});
+document.getElementById('limit-max').addEventListener('change', e => {
+  S.limitMax = Math.max(1, parseInt(e.target.value) || 8);
+  e.target.value = S.limitMax;
+});
+
+function setSeat(btn) {
+  document.querySelectorAll('#seat-row .wind-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  S.seat = btn.dataset.w;
+  renderBonus();
+}
+function setRound(btn) {
+  document.querySelectorAll('#round-row .wind-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  S.round = btn.dataset.w;
+}
+
+/* ============================================================
+   WIN TYPE
+   ============================================================ */
+function toggleWin(key) {
+  if (key === 'discard' || key === 'selfDraw') {
+    S.win.discard = false; S.win.selfDraw = false;
+  }
+  S.win[key] = !S.win[key];
+  if ((key === 'heavenly' || key === 'earthly') && S.win[key]) {
+    S.win.selfDraw = true; S.win.discard = false;
+  }
+  renderWinChips();
+}
+function renderWinChips() {
+  ['discard','selfDraw','lastTile','kongReplace','robKong','heavenly','earthly'].forEach(k => {
+    document.getElementById('c-' + k).classList.toggle('on', !!S.win[k]);
+  });
+}
+
+/* ============================================================
+   HAND MODE
+   ============================================================ */
+function setMode(m) {
+  S.mode = m;
+  ['standard','pairs','thirteen'].forEach(x => {
+    document.getElementById('m-' + x).classList.toggle('on', x === m);
+    document.getElementById('hand-' + x).style.display = x === m ? '' : 'none';
+  });
+  clearResults();
+}
+
+/* ============================================================
+   TILE HELPERS
+   ============================================================ */
+function tileKey(t) {
+  if (t.suit) return `${t.suit}${t.num}`;
+  if (t.wind) return `W${t.wind}`;
+  if (t.drag) return `D${t.drag}`;
+  return JSON.stringify(t);
+}
+
+function makeTileEl(t, size = 'sm', extra = '') {
+  let cls, tn, ts = '';
+  if (t.suit) {
+    cls = SUITS[t.suit].cls;
+    tn  = t.num;
+    ts  = SUITS[t.suit].ch;
+  } else if (t.wind) {
+    cls = 't-wind'; tn = WIND_CH[t.wind];
+  } else if (t.drag) {
+    const d = DRAGONS.find(x => x.name === t.drag);
+    cls = d.cls; tn = d.ch;
+  }
+  const w = size === 'lg' ? 'width:42px;height:54px' : 'width:34px;height:44px';
+  return `<div class="tile ${cls} ${extra}" style="${w}">
+    <span class="tn">${tn}</span>${ts ? `<span class="ts">${ts}</span>` : ''}
+  </div>`;
+}
+
+function setTiles(set) {
+  if (set.type === 'pong') return [set.tile, set.tile, set.tile];
+  if (set.type === 'kong') return [set.tile, set.tile, set.tile, set.tile];
+  if (set.type === 'chow') {
+    const n = set.tile.num;
+    return [{suit:set.tile.suit,num:n},{suit:set.tile.suit,num:n+1},{suit:set.tile.suit,num:n+2}];
+  }
+  return [];
+}
+
+/* ============================================================
+   RENDER HAND
+   ============================================================ */
+function renderHand() {
+  renderStandardHand();
+  renderPairs7Hand();
+}
+
+function renderStandardHand() {
+  const list = document.getElementById('sets-list');
+  let html = '';
+
+  S.sets.forEach((set, i) => {
+    const tiles = setTiles(set).map(t => makeTileEl(t)).join('');
+    const lbl = set.type.toUpperCase();
+    html += `<div class="set-row filled">
+      <span class="set-badge">${lbl}</span>
+      <div class="tiles-wrap">${tiles}</div>
+      <button class="del-btn" onclick="removeSet(${i})" title="Remove">✕</button>
+    </div>`;
+  });
+
+  if (S.pair) {
+    const tiles = makeTileEl(S.pair.tile) + makeTileEl(S.pair.tile);
+    html += `<div class="set-row filled">
+      <span class="set-badge">PAIR</span>
+      <div class="tiles-wrap">${tiles}</div>
+      <button class="del-btn" onclick="removePair()" title="Remove">✕</button>
+    </div>`;
+  } else {
+    html += `<div class="empty-hint">No pair yet — tap Add Pair below</div>`;
+  }
+
+  list.innerHTML = html;
+
+  // update button states
+  const full = S.sets.length >= 4;
+  document.getElementById('btn-pong').disabled = full;
+  document.getElementById('btn-kong').disabled = full;
+  document.getElementById('btn-chow').disabled = full;
+  document.getElementById('btn-pair').disabled = !!S.pair;
+}
+
+function renderPairs7Hand() {
+  const list  = document.getElementById('pairs-list');
+  const count = document.getElementById('pair7-count');
+  const btn   = document.getElementById('btn-pair7');
+
+  let html = '';
+  S.pairs7.forEach((p, i) => {
+    const tiles = makeTileEl(p.tile) + makeTileEl(p.tile);
+    html += `<div class="set-row filled">
+      <span class="set-badge">PAIR</span>
+      <div class="tiles-wrap">${tiles}</div>
+      <button class="del-btn" onclick="removePair7(${i})" title="Remove">✕</button>
+    </div>`;
+  });
+  if (!html) html = `<div class="empty-hint">Add 7 pairs below</div>`;
+  list.innerHTML = html;
+  count.textContent = `(${S.pairs7.length} / 7)`;
+  btn.disabled = S.pairs7.length >= 7;
+}
+
+function removeSet(i) { S.sets.splice(i, 1); renderHand(); clearResults(); }
+function removePair()  { S.pair = null;       renderHand(); clearResults(); }
+function removePair7(i){ S.pairs7.splice(i,1); renderPairs7Hand(); clearResults(); }
+
+/* ============================================================
+   BONUS TILES
+   ============================================================ */
+function renderBonus() {
+  // Flowers
+  const fg = document.getElementById('flowers-grid');
+  document.getElementById('sec-flowers').style.display = S.useFlowers ? '' : 'none';
+  if (S.useFlowers) {
+    fg.innerHTML = FLOWERS.map(f => {
+      const on   = S.flowers.has(f.id);
+      const star = f.seat === S.seat ? ' ★' : '';
+      return `<button class="bonus-chip ${on?'on':''}" onclick="toggleFlower('${f.id}')">
+        <div class="tile t-flower" style="width:30px;height:38px">
+          <span class="tn" style="font-size:13px">${f.ch}</span>
+        </div>
+        <div>
+          <div class="bc-name">${f.name}${star}</div>
+          <div class="bc-sub">${f.kind==='flower'?'🌸':'🍂'} ${f.seat}</div>
+        </div>
+      </button>`;
+    }).join('');
+  }
+
+  // Animals
+  const ag = document.getElementById('animals-grid');
+  document.getElementById('sec-animals').style.display = S.useAnimals ? '' : 'none';
+  if (S.useAnimals) {
+    ag.innerHTML = ANIMALS.map(a => {
+      const on = S.animals.has(a.id);
+      return `<button class="bonus-chip ${on?'on':''}" onclick="toggleAnimal('${a.id}')">
+        <div class="tile t-animal" style="width:30px;height:38px">
+          <span class="tn" style="font-size:16px">${a.em}</span>
+        </div>
+        <div>
+          <div class="bc-name">${a.name}</div>
+          <div class="bc-sub">+1 tai</div>
+        </div>
+      </button>`;
+    }).join('');
+  }
+}
+
+function syncBonusCard() {
+  document.getElementById('bonus-card').style.display =
+    (S.useFlowers || S.useAnimals) ? '' : 'none';
+}
+
+function toggleFlower(id) {
+  S.flowers.has(id) ? S.flowers.delete(id) : S.flowers.add(id);
+  renderBonus();
+}
+function toggleAnimal(id) {
+  S.animals.has(id) ? S.animals.delete(id) : S.animals.add(id);
+  renderBonus();
+}
+
+/* ============================================================
+   TILE PICKER MODAL
+   ============================================================ */
+const PICKER_META = {
+  pong:  { title: 'Add Pong',  hint: 'Pick the tile — app will show 3 of the same' },
+  kong:  { title: 'Add Kong',  hint: 'Pick the tile — app will show 4 of the same' },
+  chow:  { title: 'Add Chow',  hint: 'Pick the LOWEST tile of the 3-tile run' },
+  pair:  { title: 'Add Pair',  hint: 'Pick the tile — app will show 2 of the same' },
+  pair7: { title: 'Add Pair',  hint: 'Pick the tile for this pair' },
+};
+
+function openPicker(type) {
+  picker = { type, tile: null };
+  document.getElementById('modal-title').textContent = PICKER_META[type].title;
+  document.getElementById('modal-hint').textContent  = PICKER_META[type].hint;
+  document.getElementById('modal-ok').disabled = true;
+  renderPickerBody(type);
+  document.getElementById('overlay').classList.remove('hide');
+}
+
+function renderPickerBody(type) {
+  const body = document.getElementById('modal-body');
+  let html = '';
+
+  // Numbered suits
+  Object.entries(SUITS).forEach(([suit, meta]) => {
+    html += `<div class="sect-lbl">${meta.label}</div><div class="tile-grid">`;
+    for (let n = 1; n <= 9; n++) {
+      const t   = { suit, num: n };
+      const dim = (type === 'chow' && n > 7) ? 'dim' : 'click';
+      html += `<div class="tile ${meta.cls} ${dim}" data-tile='${JSON.stringify(t)}'>
+        <span class="tn">${n}</span><span class="ts">${meta.ch}</span>
+      </div>`;
+    }
+    html += `</div>`;
+  });
+
+  // Honors (not for chow)
+  if (type !== 'chow') {
+    html += `<div class="sect-lbl">Winds</div><div class="tile-grid">`;
+    WINDS.forEach(w => {
+      const t = { wind: w };
+      html += `<div class="tile t-wind click" data-tile='${JSON.stringify(t)}'>
+        <span class="tn">${WIND_CH[w]}</span>
+      </div>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="sect-lbl">Dragons</div><div class="tile-grid">`;
+    DRAGONS.forEach(d => {
+      const t = { drag: d.name };
+      html += `<div class="tile ${d.cls} click" data-tile='${JSON.stringify(t)}'>
+        <span class="tn">${d.ch}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  body.innerHTML = html;
+
+  // delegate clicks
+  body.onclick = e => {
+    const el = e.target.closest('.tile.click');
+    if (!el) return;
+    const t = JSON.parse(el.dataset.tile);
+    pickTile(t, el);
+  };
+}
+
+function pickTile(t, el) {
+  picker.tile = t;
+  document.querySelectorAll('#modal-body .tile.sel').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('modal-ok').disabled = false;
+  renderChowPreview(t);
+}
+
+function renderChowPreview(t) {
+  const old = document.getElementById('chow-prev');
+  if (old) old.remove();
+  if (picker.type !== 'chow') return;
+
+  const n = t.num;
+  const tiles = [0,1,2].map(o => makeTileEl({suit:t.suit, num:n+o},'sm')).join('');
+  const div = document.createElement('div');
+  div.id = 'chow-prev';
+  div.className = 'chow-preview';
+  div.innerHTML = `<span class="chow-preview-lbl">Chow:</span>${tiles}`;
+  document.getElementById('modal-body').insertAdjacentElement('afterend', div);
+}
+
+function confirmPick() {
+  if (!picker.tile) return;
+  const t = picker.tile;
+
+  if (picker.type === 'pong') {
+    S.sets.push({ type:'pong', tile: t });
+  } else if (picker.type === 'kong') {
+    S.sets.push({ type:'kong', tile: t });
+  } else if (picker.type === 'chow') {
+    S.sets.push({ type:'chow', tile: t }); // tile.num = lowest of the run
+  } else if (picker.type === 'pair') {
+    S.pair = { tile: t };
+  } else if (picker.type === 'pair7') {
+    S.pairs7.push({ tile: t });
+  }
+
+  closePicker();
+  renderHand();
+  clearResults();
+}
+
+function closePicker() {
+  document.getElementById('overlay').classList.add('hide');
+  const p = document.getElementById('chow-prev');
+  if (p) p.remove();
+  picker = { type: null, tile: null };
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closePicker();
+}
+
+/* ============================================================
+   SCORING ENGINE
+   ============================================================ */
+
+function allTilesFlat(sets, pair) {
+  const tiles = [];
+  sets.forEach(s => {
+    const ts = setTiles(s);
+    ts.forEach(t => tiles.push(t));
+  });
+  if (pair) { tiles.push(pair.tile); tiles.push(pair.tile); }
+  return tiles;
+}
+
+function isSuitTile(t)   { return !!t.suit; }
+function isHonourTile(t) { return !!(t.wind || t.drag); }
+function isTerminal(t)   { return t.suit && (t.num === 1 || t.num === 9); }
+
+function calculate() {
+  const R = []; // result rows: {name, tai, isLimit}
+  clearResults();
+
+  if (S.mode === 'thirteen') {
+    R.push({ name:'Thirteen Wonders (十三幺)', tai: S.limitMax, isLimit: true });
+    addWinRows(R);
+    addFlowerRows(R);
+    addAnimalRows(R);
+    return showResults(R);
+  }
+
+  if (S.mode === 'pairs') {
+    if (S.pairs7.length !== 7) return showError(`Seven Pairs needs exactly 7 pairs. You have ${S.pairs7.length}.`);
+    R.push({ name:'Seven Pairs (七對子)', tai: 3 });
+    addWinRows(R);
+    addFlowerRows(R);
+    addAnimalRows(R);
+    return showResults(R);
+  }
+
+  // ── Standard hand ──
+  if (S.sets.length !== 4 || !S.pair)
+    return showError(`A standard hand needs 4 sets + 1 pair. You have ${S.sets.length} set(s) and ${S.pair?'1':'no'} pair.`);
+
+  const allTiles = allTilesFlat(S.sets, S.pair);
+
+  // 1. Check limit hands
+  const limit = detectLimit(S.sets, S.pair);
+  if (limit) {
+    R.push({ name: limit, tai: S.limitMax, isLimit: true });
+  } else {
+    // 2. Hand pattern
+    const pat = detectPattern(S.sets, S.pair, allTiles);
+    if (pat) R.push(pat);
+
+    // 3. Per-set bonuses (only for pong/kong)
+    S.sets.filter(s => s.type === 'pong' || s.type === 'kong').forEach(s => {
+      setBonus(s.tile, R);
+    });
+  }
+
+  // 4. Win circumstances
+  addWinRows(R);
+
+  // 5. Bonus tiles
+  addFlowerRows(R);
+  addAnimalRows(R);
+
+  showResults(R);
+}
+
+/* ── Limit hand detection ── */
+function detectLimit(sets, pair) {
+  if (S.win.heavenly) return 'Heavenly Win (天糊) — First Draw';
+  if (S.win.earthly)  return 'Earthly Win (地糊) — Second Draw';
+
+  const pongs = sets.filter(s => s.type === 'pong' || s.type === 'kong');
+  const chows = sets.filter(s => s.type === 'chow');
+
+  // Big Three Dragons: 3 dragon pongs
+  const dragonPongs = pongs.filter(s => s.tile.drag).length;
+  if (dragonPongs >= 3) return 'Big Three Dragons (大三元)';
+
+  // Big Four Winds: 4 wind pongs
+  const windPongs = pongs.filter(s => s.tile.wind).length;
+  if (windPongs === 4) return 'Big Four Winds (大四喜)';
+
+  // All Honors: every set + pair is wind or dragon
+  const allTiles = allTilesFlat(sets, pair);
+  if (allTiles.every(isHonourTile)) return 'All Honors (字一色)';
+
+  // All Terminals: only 1s and 9s, all pong
+  const allTermPong = pongs.length === 4 && pongs.every(s => isTerminal(s.tile));
+  const pairTerm    = isTerminal(pair.tile);
+  if (allTermPong && pairTerm && chows.length === 0) return 'All Terminals (清老頭)';
+
+  // Four Concealed Pungs is NOT auto-detected here
+  // (would need to know if sets were exposed — handled via hand description)
+
+  return null;
+}
+
+/* ── Hand pattern ── */
+function detectPattern(sets, pair, allTiles) {
+  const chows = sets.filter(s => s.type === 'chow');
+  const pongs = sets.filter(s => s.type === 'pong' || s.type === 'kong');
+
+  const suits    = new Set(allTiles.filter(isSuitTile).map(t => t.suit));
+  const hasHonor = allTiles.some(isHonourTile);
+
+  // Little Three Dragons: 2 dragon pongs + dragon pair
+  const dragonPongs = pongs.filter(s => s.tile.drag).length;
+  if (dragonPongs === 2 && pair.tile.drag)
+    return { name:'Little Three Dragons (小三元)', tai: 3 };
+
+  // Little Four Winds: 3 wind pongs + wind pair
+  const windPongs = pongs.filter(s => s.tile.wind).length;
+  if (windPongs === 3 && pair.tile.wind)
+    return { name:'Little Four Winds (小四喜)', tai: 2 };
+
+  // All Chow
+  if (chows.length === 4) {
+    const pairIsHonour = isHonourTile(pair.tile);
+    const hasBonus     = (S.useFlowers && S.flowers.size > 0) || (S.useAnimals && S.animals.size > 0);
+    if (!pairIsHonour && !hasBonus)
+      return { name:'All Chow — Ping Wu (平糊, no bonus tiles)', tai: 4 };
+    return { name:'All Chow (平糊)', tai: 1 };
+  }
+
+  // All Pong
+  if (pongs.length === 4)
+    return { name:'All Pong (對對糊)', tai: 2 };
+
+  // Pure Suit: one suit, no honors
+  if (suits.size === 1 && !hasHonor)
+    return { name:'Pure Suit (清一色)', tai: 4 };
+
+  // Mixed Suit: one suit + honors
+  if (suits.size === 1 && hasHonor)
+    return { name:'Mixed Suit (混一色)', tai: 2 };
+
+  // Mixed Terminals & Honors: only 1s, 9s, winds, dragons
+  if (allTiles.every(t => isTerminal(t) || isHonourTile(t)))
+    return { name:'Mixed Terminals & Honors (混老頭)', tai: 2 };
+
+  // Half Flush (two suits only, one of which includes honors) - already covered by Mixed Suit above
+  // Multi-suit plain hand: 0 tai base — no pattern bonus
+  return null;
+}
+
+/* ── Per-set bonuses ── */
+function setBonus(tile, R) {
+  if (tile.drag)
+    R.push({ name:`${tile.drag} Dragon Pong/Kong`, tai: 1 });
+  if (tile.wind) {
+    if (tile.wind === S.seat)
+      R.push({ name:`Seat Wind Pong/Kong (${tile.wind})`, tai: 1 });
+    if (tile.wind === S.round)
+      R.push({ name:`Prevailing Wind Pong/Kong (${tile.wind})`, tai: 1 });
+  }
+}
+
+/* ── Win circumstances ── */
+function addWinRows(R) {
+  if (S.win.selfDraw)    R.push({ name:'Self-Draw (自摸)',       tai: 1 });
+  if (S.win.lastTile)    R.push({ name:'Last Tile Win',          tai: 1 });
+  if (S.win.kongReplace) R.push({ name:'Kong Replacement Win',   tai: 1 });
+  if (S.win.robKong)     R.push({ name:'Robbing the Kong',       tai: 1 });
+}
+
+/* ── Flower/season rows ── */
+function addFlowerRows(R) {
+  if (!S.useFlowers || S.flowers.size === 0) return;
+
+  const fl = FLOWERS.filter(f => f.kind === 'flower' && S.flowers.has(f.id));
+  const se = FLOWERS.filter(f => f.kind === 'season' && S.flowers.has(f.id));
+
+  fl.forEach(f => {
+    const star = f.seat === S.seat ? ' ★' : '';
+    R.push({ name:`Flower: ${f.name}${star}`, tai: 1 });
+  });
+  se.forEach(f => {
+    const star = f.seat === S.seat ? ' ★' : '';
+    R.push({ name:`Season: ${f.name}${star}`, tai: 1 });
+  });
+
+  // Complete set bonuses
+  const allFl = FLOWERS.filter(f => f.kind === 'flower');
+  const allSe = FLOWERS.filter(f => f.kind === 'season');
+  if (allFl.every(f => S.flowers.has(f.id)))
+    R.push({ name:'All 4 Flowers Bonus', tai: 1 });
+  if (allSe.every(f => S.flowers.has(f.id)))
+    R.push({ name:'All 4 Seasons Bonus', tai: 1 });
+}
+
+/* ── Animal rows ── */
+function addAnimalRows(R) {
+  if (!S.useAnimals || S.animals.size === 0) return;
+  ANIMALS.forEach(a => {
+    if (S.animals.has(a.id))
+      R.push({ name:`${a.em} ${a.name}`, tai: 1 });
+  });
+  if (S.animals.size === 4)
+    R.push({ name:'All 4 Animals Bonus', tai: 1 });
+}
+
+/* ============================================================
+   RENDER RESULTS
+   ============================================================ */
+function showResults(R) {
+  const total   = R.reduce((s, r) => s + r.tai, 0);
+  const limited = R.some(r => r.isLimit);
+  const area    = document.getElementById('results-area');
+
+  let rows = R.map(r =>
+    `<div class="b-item${r.isLimit?' b-limit':''}">
+      <span class="b-name">${r.isLimit ? '⚡ ' : '✓ '}${r.name}</span>
+      <span class="b-tai">+${r.tai}</span>
+    </div>`
+  ).join('');
+
+  if (R.length > 1) {
+    rows += `<div class="b-div"></div>
+      <div class="b-total-row">
+        <span>Total</span>
+        <span>${total} Tai</span>
+      </div>`;
+  }
+
+  area.innerHTML = `<div class="results">
+    <div class="result-total">
+      ${limited ? `<div class="result-limit">⚡ Limit Hand</div>` : ''}
+      <div class="result-num">${total}</div>
+      <div class="result-unit">tai</div>
+    </div>
+    <div class="breakdown">${rows}</div>
+  </div>`;
+
+  area.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  incrementCount(); // 🔢 count every successful calculation
+}
+
+function showError(msg) {
+  document.getElementById('results-area').innerHTML =
+    `<div class="msg warn">⚠️ ${msg}</div>`;
+}
+function clearResults() {
+  document.getElementById('results-area').innerHTML = '';
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+function resetAll() {
+  S.sets   = [];
+  S.pair   = null;
+  S.pairs7 = [];
+  S.flowers.clear();
+  S.animals.clear();
+  S.win = { selfDraw:true, discard:false, lastTile:false,
+             kongReplace:false, robKong:false, heavenly:false, earthly:false };
+  renderHand();
+  renderBonus();
+  renderWinChips();
+  clearResults();
+}
+
+/* ============================================================
+   USAGE COUNTER
+   Uses counterapi.dev — free, no auth needed, CORS-enabled.
+   Namespace: mahjong-tai-sg  |  Key: uses
+   ============================================================ */
+const COUNTER_URL = 'https://api.counterapi.dev/v1/mahjong-tai-sg/uses';
+
+function loadCount() {
+  fetch(COUNTER_URL, { method: 'GET', cache: 'no-cache' })
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('usage-count').textContent = (d.count || 0).toLocaleString();
+      document.getElementById('usage-dot').style.background = '#4caf50';
+    })
+    .catch(() => {
+      document.getElementById('usage-count').textContent = '—';
+      document.getElementById('usage-dot').style.background = '#ccc';
+    });
+}
+
+function incrementCount() {
+  fetch(COUNTER_URL + '/up', { method: 'GET', cache: 'no-cache' })
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('usage-count').textContent = (d.count || 0).toLocaleString();
+      document.getElementById('usage-dot').style.background = '#4caf50';
+    })
+    .catch(() => {}); // silent fail — don't break the app
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderHand();
+renderBonus();
+renderWinChips();
+loadCount(); // show current count on page load
+</script>
+</body>
+</html>
