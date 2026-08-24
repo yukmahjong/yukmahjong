@@ -74,6 +74,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .sc-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sc-score{font-size:18px;font-weight:900;color:var(--text-sec);margin-top:2px;}
 .sc-score.pos{color:#27ae60;}.sc-score.neg{color:#e74c3c;}
+.sc-seat{font-size:12px;font-weight:800;margin-top:3px;letter-spacing:.5px;}
+.sc-seat.east{color:#e67e22;}.sc-seat.south{color:#27ae60;}
+.sc-seat.west{color:#2980b9;}.sc-seat.north{color:#8e44ad;}
+.sc-dealer{font-size:9px;background:#e67e22;color:#fff;border-radius:3px;
+  padding:1px 4px;font-weight:700;display:inline-block;margin-top:2px;vertical-align:middle;}
 
 /* ── CONTAINER ── */
 .wrap{max-width:480px;margin:0 auto;padding:14px 14px 0;}
@@ -385,6 +390,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     <span class="room-code-label">ROOM</span>
     <span class="room-code-val" id="room-code-display">——</span>
     <button class="room-btn" onclick="copyRoomCode()">📋 Copy</button>
+    <button class="room-btn" onclick="randomiseSeats()">🎲 Seats</button>
     <button class="room-btn" onclick="showHistory()">📜 History</button>
     <button class="room-btn leave" onclick="leaveRoom()">✕ Leave</button>
   </div>
@@ -726,7 +732,7 @@ function showSetupWizard() {
    ============================================================ */
 const ROOM = {
   code: null, myId: null, myName: null,
-  isHost: false, players: {}, rounds: {}, status: 'landing',
+  isHost: false, players: {}, rounds: {}, seats: {}, dealer: null, status: 'landing',
   _unsub: null,
 };
 let pendingAction = null;
@@ -923,7 +929,15 @@ function listenRoom(code) {
     if (!data) return;
     ROOM.players = data.players || {};
     ROOM.rounds  = data.rounds  || {};
+    ROOM.seats   = data.seats   || {};
+    ROOM.dealer  = data.dealer  || null;
     renderScoreboard();
+    // Auto-sync my seat wind setting
+    if (ROOM.seats[ROOM.myId]) {
+      S.seat = ROOM.seats[ROOM.myId];
+      document.querySelectorAll('#seat-row .wind-btn').forEach(b =>
+        b.classList.toggle('on', b.dataset.w === S.seat));
+    }
   });
   ROOM._unsub = () => ref.off('value');
 }
@@ -931,7 +945,7 @@ function listenRoom(code) {
 function leaveRoom() {
   if (ROOM._unsub) { ROOM._unsub(); ROOM._unsub = null; }
   ROOM.code = null; ROOM.isHost = false; ROOM.status = 'landing';
-  ROOM.players = {}; ROOM.rounds = {};
+  ROOM.players = {}; ROOM.rounds = {}; ROOM.seats = {}; ROOM.dealer = null;
   resetAll(); showLanding();
 }
 
@@ -941,9 +955,29 @@ function copyRoomCode() {
     .catch(() => showToast('Code: ' + ROOM.code));
 }
 
+async function randomiseSeats() {
+  const ids = Object.keys(ROOM.players);
+  if (ids.length < 2) { showToast('Need at least 2 players', true); return; }
+  const winds = ['East','South','West','North'];
+  // Fisher-Yates shuffle
+  for (let i = winds.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [winds[i], winds[j]] = [winds[j], winds[i]];
+  }
+  const seats = {};
+  ids.forEach((id, i) => { if (i < 4) seats[id] = winds[i]; });
+  const dealerId = ids.find(id => seats[id] === 'East') || null;
+  try {
+    await db.ref('rooms/' + ROOM.code).update({ seats, dealer: dealerId });
+    showToast('Seats randomised! 🎲');
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
 /* ============================================================
    SCOREBOARD
    ============================================================ */
+const SEAT_CH = {East:'東',South:'南',West:'西',North:'北'};
+
 function renderScoreboard() {
   const sb = document.getElementById('scoreboard');
   if (!sb) return;
@@ -956,9 +990,15 @@ function renderScoreboard() {
     const tally = wins > 0
       ? `<div class="sc-tally">🏆${wins}${hu?` 胡${hu}`:''}${ximo?` 自${ximo}`:''}</div>`
       : '';
+    const seat = (ROOM.seats && ROOM.seats[id]) || null;
+    const isDealer = ROOM.dealer === id;
+    const seatBadge = seat
+      ? `<div class="sc-seat ${seat.toLowerCase()}">${SEAT_CH[seat]}${isDealer ? ' <span class="sc-dealer">莊</span>' : ''}</div>`
+      : '';
     return `<div class="score-card${isMe?' me':''}${p.isHost?' host':''}">
       <div class="sc-name">${isMe?'👤 ':''}${p.name}</div>
       <div class="sc-score ${cls}">${sc>0?'+':''}${sc}</div>
+      ${seatBadge}
       ${tally}
     </div>`;
   }).join('');
