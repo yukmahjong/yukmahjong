@@ -5,405 +5,412 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Mahjong Tai Counter</title>
 <style>
-/* ===================== RESET & ROOT ===================== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #f2f2f7;
-  --card: #ffffff;
-  --accent: #c0392b;
-  --accent-dark: #a93226;
-  --accent-light: #fdf0ef;
-  --text: #1c1c1e;
-  --text-sec: #6c6c70;
-  --border: #e5e5ea;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
-  --radius: 14px;
-  --radius-sm: 9px;
-  /* suit colours */
-  --bam-bg:#e8f5e9; --bam-fg:#2e7d32;
-  --wan-bg:#fde8e8; --wan-fg:#c62828;
-  --pin-bg:#e3f2fd; --pin-fg:#1565c0;
-  --wind-bg:#f3e5f5; --wind-fg:#6a1b9a;
-  --drag-red-bg:#fde8e8; --drag-red-fg:#c62828;
-  --drag-grn-bg:#e8f5e9; --drag-grn-fg:#2e7d32;
-  --drag-wht-bg:#f5f5f5; --drag-wht-fg:#546e7a;
-  --flower-bg:#fce4ec; --flower-fg:#ad1457;
-  --animal-bg:#e0f7fa; --animal-fg:#00695c;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f2f2f7;--card:#ffffff;--accent:#c0392b;--accent-dark:#a93226;
+  --accent-light:#fdf0ef;--text:#1c1c1e;--text-sec:#6c6c70;
+  --border:#e5e5ea;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
+  --radius:14px;--radius-sm:9px;
+  --bam-bg:#e8f5e9;--bam-fg:#2e7d32;
+  --wan-bg:#fde8e8;--wan-fg:#c62828;
+  --pin-bg:#e3f2fd;--pin-fg:#1565c0;
+  --wind-bg:#f3e5f5;--wind-fg:#6a1b9a;
+  --drag-red-bg:#fde8e8;--drag-red-fg:#c62828;
+  --drag-grn-bg:#e8f5e9;--drag-grn-fg:#2e7d32;
+  --drag-wht-bg:#f5f5f5;--drag-wht-fg:#546e7a;
+  --flower-bg:#fce4ec;--flower-fg:#ad1457;
+  --animal-bg:#e0f7fa;--animal-fg:#00695c;
 }
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:32px;
+  -webkit-font-smoothing:antialiased;}
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  padding-bottom: 32px;
-  -webkit-font-smoothing: antialiased;
-}
+/* ── LANDING ── */
+#landing{position:fixed;inset:0;z-index:200;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:24px;}
+.landing-inner{width:100%;max-width:380px;text-align:center;}
+.landing-logo{font-size:56px;margin-bottom:8px;}
+.landing-title{font-size:22px;font-weight:800;margin-bottom:4px;}
+.landing-sub{font-size:13px;color:var(--text-sec);margin-bottom:32px;}
+.lbtn{width:100%;padding:14px;border:none;border-radius:14px;
+  background:var(--accent);color:#fff;font-size:15px;font-weight:700;
+  cursor:pointer;margin-bottom:12px;transition:background .15s;
+  box-shadow:0 4px 14px rgba(192,57,43,.3);}
+.lbtn:hover{background:var(--accent-dark);}
+.lbtn.sec{background:var(--card);color:var(--accent);
+  border:1.5px solid var(--accent);box-shadow:none;}
+.lbtn.ghost{background:transparent;color:var(--text-sec);
+  border:1.5px solid var(--border);box-shadow:none;}
+.join-row{display:flex;gap:8px;margin-bottom:12px;}
+.join-input{flex:1;padding:13px 14px;border:1.5px solid var(--border);
+  border-radius:14px;font-size:16px;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;text-align:center;background:var(--card);}
+.join-input:focus{outline:none;border-color:var(--accent);}
+.join-go{padding:13px 18px;border:none;border-radius:14px;
+  background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+.landing-or{font-size:12px;color:var(--text-sec);margin:4px 0 12px;}
 
-/* ===================== HEADER ===================== */
-.header {
-  background: var(--accent);
-  color: #fff;
-  padding: 14px 20px 12px;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 2px 8px rgba(192,57,43,0.35);
-}
-.header h1 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
-.header p  { font-size: 12px; opacity: .8; margin-top: 1px; }
+/* ── HEADER ── */
+.header{background:var(--accent);color:#fff;padding:14px 20px 12px;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(192,57,43,.35);}
+.header h1{font-size:17px;font-weight:700;letter-spacing:-.3px;}
+.header p{font-size:12px;opacity:.8;margin-top:1px;}
 
-/* ===================== CONTAINER ===================== */
-.wrap { max-width: 480px; margin: 0 auto; padding: 14px 14px 0; }
+/* ── ROOM BAR ── */
+#room-bar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 14px;}
+.room-code-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.room-code-label{font-size:11px;color:var(--text-sec);font-weight:600;}
+.room-code-val{font-size:16px;font-weight:900;color:var(--accent);letter-spacing:2px;}
+.room-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg);font-size:11px;font-weight:600;cursor:pointer;
+  color:var(--text-sec);transition:all .15s;}
+.room-btn:hover{border-color:var(--accent);color:var(--accent);}
+.room-btn.leave{margin-left:auto;}
+.scoreboard{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;}
+.score-card{flex:1;min-width:75px;background:var(--bg);border-radius:10px;
+  padding:8px 10px;text-align:center;border:1.5px solid var(--border);position:relative;}
+.score-card.me{border-color:var(--accent);background:var(--accent-light);}
+.score-card.host::after{content:'👑';font-size:9px;position:absolute;top:3px;right:4px;}
+.sc-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sc-score{font-size:18px;font-weight:900;color:var(--text-sec);margin-top:2px;}
+.sc-score.pos{color:#27ae60;}.sc-score.neg{color:#e74c3c;}
 
-/* ===================== CARD ===================== */
-.card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow);
-}
-.card-label {
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .9px;
-  color: var(--text-sec); margin-bottom: 12px;
-}
+/* ── CONTAINER ── */
+.wrap{max-width:480px;margin:0 auto;padding:14px 14px 0;}
 
-/* ===================== TOGGLE ===================== */
-.row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; }
-.row + .row { border-top: 1px solid var(--border); }
-.row-text {}
-.row-title { font-size: 14px; font-weight: 500; }
-.row-sub   { font-size: 12px; color: var(--text-sec); margin-top: 1px; }
-.sw { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
-.sw input { opacity: 0; width: 0; height: 0; }
-.sw-track {
-  position: absolute; inset: 0;
-  background: #d1d1d6; border-radius: 26px; cursor: pointer;
-  transition: background .2s;
-}
-.sw-track::after {
-  content: '';
-  position: absolute; width: 20px; height: 20px;
-  background: #fff; border-radius: 50%;
-  top: 3px; left: 3px;
-  transition: transform .2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,.25);
-}
-.sw input:checked ~ .sw-track { background: var(--accent); }
-.sw input:checked ~ .sw-track::after { transform: translateX(18px); }
+/* ── CARD ── */
+.card{background:var(--card);border-radius:var(--radius);padding:16px;
+  margin-bottom:12px;box-shadow:var(--shadow);}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.9px;color:var(--text-sec);margin-bottom:12px;}
 
-/* ===================== WIND SELECTOR ===================== */
-.wind-row { display: flex; gap: 7px; margin-top: 6px; }
-.wind-btn {
-  flex: 1; border: 1.5px solid var(--border); border-radius: 10px;
-  background: #fff; cursor: pointer; padding: 8px 4px;
-  text-align: center; transition: all .15s; color: var(--text-sec);
-}
-.wind-btn .wc { display: block; font-size: 18px; font-weight: 700; }
-.wind-btn .wn { display: block; font-size: 10px; margin-top: 1px; }
-.wind-btn:hover { border-color: var(--accent); color: var(--accent); }
-.wind-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* ── TOGGLE ── */
+.row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;}
+.row+.row{border-top:1px solid var(--border);}
+.row-title{font-size:14px;font-weight:500;}
+.row-sub{font-size:12px;color:var(--text-sec);margin-top:1px;}
+.sw{position:relative;width:44px;height:26px;flex-shrink:0;}
+.sw input{opacity:0;width:0;height:0;}
+.sw-track{position:absolute;inset:0;background:#d1d1d6;border-radius:26px;
+  cursor:pointer;transition:background .2s;}
+.sw-track::after{content:'';position:absolute;width:20px;height:20px;
+  background:#fff;border-radius:50%;top:3px;left:3px;
+  transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+.sw input:checked~.sw-track{background:var(--accent);}
+.sw input:checked~.sw-track::after{transform:translateX(18px);}
 
-/* ===================== LIMIT INPUT ===================== */
-.limit-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 0; margin-top: 2px; border-top: 1px solid var(--border);
-}
-.limit-input {
-  width: 58px; padding: 6px 8px;
-  border: 1.5px solid var(--border); border-radius: 8px;
-  font-size: 15px; font-weight: 700; text-align: center; color: var(--accent);
-}
-.limit-input:focus { outline: none; border-color: var(--accent); }
+/* ── WIND SELECTOR ── */
+.wind-row{display:flex;gap:7px;margin-top:6px;}
+.wind-btn{flex:1;border:1.5px solid var(--border);border-radius:10px;
+  background:#fff;cursor:pointer;padding:8px 4px;text-align:center;
+  transition:all .15s;color:var(--text-sec);}
+.wind-btn .wc{display:block;font-size:18px;font-weight:700;}
+.wind-btn .wn{display:block;font-size:10px;margin-top:1px;}
+.wind-btn:hover{border-color:var(--accent);color:var(--accent);}
+.wind-btn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
 
-/* ===================== CHIPS ===================== */
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip {
-  padding: 7px 13px; border: 1.5px solid var(--border);
-  border-radius: 100px; background: #fff; cursor: pointer;
-  font-size: 13px; font-weight: 500; color: var(--text-sec);
-  transition: all .15s; user-select: none;
-}
-.chip.on { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+/* ── LIMIT INPUT ── */
+.limit-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;margin-top:2px;border-top:1px solid var(--border);}
+.limit-input{width:58px;padding:6px 8px;border:1.5px solid var(--border);
+  border-radius:8px;font-size:15px;font-weight:700;text-align:center;color:var(--accent);}
+.limit-input:focus{outline:none;border-color:var(--accent);}
 
-/* ===================== HAND MODE ===================== */
-.modes { display: flex; gap: 7px; margin-bottom: 13px; }
-.mode-btn {
-  flex: 1; padding: 9px 6px;
-  border: 1.5px solid var(--border); border-radius: 10px;
-  background: #fff; cursor: pointer;
-  font-size: 12px; font-weight: 600; color: var(--text-sec);
-  text-align: center; transition: all .15s;
-}
-.mode-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* ── CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{padding:7px 13px;border:1.5px solid var(--border);border-radius:100px;
+  background:#fff;cursor:pointer;font-size:13px;font-weight:500;
+  color:var(--text-sec);transition:all .15s;user-select:none;}
+.chip.on{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
 
-/* ===================== SET DISPLAY ===================== */
-.sets-list { display: flex; flex-direction: column; gap: 8px; }
-.set-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 10px; background: var(--bg); border-radius: 10px;
-  border: 1.5px solid var(--border);
-}
-.set-row.filled { background: #fafafa; border-color: #e0e0e0; }
-.set-badge {
-  font-size: 9px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: .6px; color: var(--text-sec);
-  min-width: 34px;
-}
-.tiles-wrap { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-.del-btn {
-  width: 22px; height: 22px; border: none; background: none;
-  cursor: pointer; color: #ccc; font-size: 14px;
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  transition: all .15s; flex-shrink: 0;
-}
-.del-btn:hover { background: #fee; color: var(--accent); }
-.empty-hint {
-  text-align: center; font-size: 13px; color: #bbb;
-  padding: 12px; border: 1.5px dashed #e0e0e0; border-radius: 10px;
-}
+/* ── HAND MODE ── */
+.modes{display:flex;gap:7px;margin-bottom:13px;}
+.mode-btn{flex:1;padding:9px 6px;border:1.5px solid var(--border);border-radius:10px;
+  background:#fff;cursor:pointer;font-size:12px;font-weight:600;
+  color:var(--text-sec);text-align:center;transition:all .15s;}
+.mode-btn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
 
-/* ===================== ADD BUTTONS ===================== */
-.add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-.add-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 11px 8px; border: 1.5px dashed var(--border); border-radius: 10px;
-  background: #fff; cursor: pointer; font-size: 13px; font-weight: 500;
-  color: var(--text-sec); transition: all .15s;
-}
-.add-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
-.add-btn:disabled { opacity: .35; cursor: not-allowed; }
-.add-full { grid-column: span 2; }
+/* ── SET DISPLAY ── */
+.sets-list{display:flex;flex-direction:column;gap:8px;}
+.set-row{display:flex;align-items:center;gap:8px;padding:9px 10px;
+  background:var(--bg);border-radius:10px;border:1.5px solid var(--border);}
+.set-row.filled{background:#fafafa;border-color:#e0e0e0;}
+.set-badge{font-size:9px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--text-sec);min-width:34px;}
+.tiles-wrap{display:flex;gap:4px;flex-wrap:wrap;flex:1;}
+.del-btn{width:22px;height:22px;border:none;background:none;cursor:pointer;
+  color:#ccc;font-size:14px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;transition:all .15s;flex-shrink:0;}
+.del-btn:hover{background:#fee;color:var(--accent);}
+.empty-hint{text-align:center;font-size:13px;color:#bbb;
+  padding:12px;border:1.5px dashed #e0e0e0;border-radius:10px;}
 
-/* ===================== TILE ===================== */
-.tile {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  width: 34px; height: 44px;
-  border-radius: 5px; font-weight: 800;
-  box-shadow: 0 2px 4px rgba(0,0,0,.12), inset 0 -2px 0 rgba(0,0,0,.1);
-  user-select: none; cursor: default; flex-shrink: 0;
-  transition: transform .1s;
-}
-.tile .tn { font-size: 14px; line-height: 1; }
-.tile .ts { font-size: 10px; line-height: 1; margin-top: 1px; }
-.tile.click { cursor: pointer; }
-.tile.click:hover { transform: translateY(-3px) scale(1.05); }
-.tile.click:active { transform: scale(.97); }
-.tile.sel { outline: 2.5px solid var(--accent); outline-offset: 2px; }
-.tile.dim { opacity: .3; cursor: not-allowed; pointer-events: none; }
-/* suit classes */
-.t-bam { background: var(--bam-bg); color: var(--bam-fg); }
-.t-wan { background: var(--wan-bg); color: var(--wan-fg); }
-.t-pin { background: var(--pin-bg); color: var(--pin-fg); }
-.t-wind { background: var(--wind-bg); color: var(--wind-fg); }
-.t-dred { background: var(--drag-red-bg); color: var(--drag-red-fg); }
-.t-dgrn { background: var(--drag-grn-bg); color: var(--drag-grn-fg); }
-.t-dwht { background: var(--drag-wht-bg); color: var(--drag-wht-fg); border: 1px solid #d0d0d0; }
-.t-flower { background: var(--flower-bg); color: var(--flower-fg); }
-.t-animal { background: var(--animal-bg); color: var(--animal-fg); }
+/* ── ADD BUTTONS ── */
+.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.add-btn{display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 8px;border:1.5px dashed var(--border);border-radius:10px;
+  background:#fff;cursor:pointer;font-size:13px;font-weight:500;
+  color:var(--text-sec);transition:all .15s;}
+.add-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.add-btn:disabled{opacity:.35;cursor:not-allowed;}
+.add-full{grid-column:span 2;}
 
-/* ===================== BONUS TILES ===================== */
-.bonus-group { display: flex; flex-wrap: wrap; gap: 8px; }
-.bonus-chip {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px; border: 1.5px solid var(--border);
-  border-radius: 10px; cursor: pointer; background: #fff;
-  transition: all .15s;
-}
-.bonus-chip.on { border-color: var(--accent); background: var(--accent-light); }
-.bonus-chip .bc-name { font-size: 12px; font-weight: 600; }
-.bonus-chip .bc-sub  { font-size: 10px; color: var(--text-sec); margin-top: 1px; }
+/* ── TILE ── */
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:34px;height:44px;border-radius:5px;font-weight:800;
+  box-shadow:0 2px 4px rgba(0,0,0,.12),inset 0 -2px 0 rgba(0,0,0,.1);
+  user-select:none;cursor:default;flex-shrink:0;transition:transform .1s;}
+.tile .tn{font-size:14px;line-height:1;}
+.tile .ts{font-size:10px;line-height:1;margin-top:1px;}
+.tile.click{cursor:pointer;}
+.tile.click:hover{transform:translateY(-3px) scale(1.05);}
+.tile.click:active{transform:scale(.97);}
+.tile.sel{outline:2.5px solid var(--accent);outline-offset:2px;}
+.tile.dim{opacity:.3;cursor:not-allowed;pointer-events:none;}
+.t-bam{background:var(--bam-bg);color:var(--bam-fg);}
+.t-wan{background:var(--wan-bg);color:var(--wan-fg);}
+.t-pin{background:var(--pin-bg);color:var(--pin-fg);}
+.t-wind{background:var(--wind-bg);color:var(--wind-fg);}
+.t-dred{background:var(--drag-red-bg);color:var(--drag-red-fg);}
+.t-dgrn{background:var(--drag-grn-bg);color:var(--drag-grn-fg);}
+.t-dwht{background:var(--drag-wht-bg);color:var(--drag-wht-fg);border:1px solid #d0d0d0;}
+.t-flower{background:var(--flower-bg);color:var(--flower-fg);}
+.t-animal{background:var(--animal-bg);color:var(--animal-fg);}
 
-/* ===================== CALC BUTTON ===================== */
-.calc-btn {
-  width: 100%; padding: 15px; border: none; border-radius: var(--radius);
-  background: var(--accent); color: #fff;
-  font-size: 16px; font-weight: 700; letter-spacing: .3px;
-  cursor: pointer; transition: background .15s, transform .1s;
-  box-shadow: 0 4px 14px rgba(192,57,43,.3);
-  margin-bottom: 12px;
-}
-.calc-btn:hover { background: var(--accent-dark); }
-.calc-btn:active { transform: scale(.99); }
+/* ── BONUS TILES ── */
+.bonus-group{display:flex;flex-wrap:wrap;gap:8px;}
+.bonus-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border:1.5px solid var(--border);border-radius:10px;cursor:pointer;
+  background:#fff;transition:all .15s;}
+.bonus-chip.on{border-color:var(--accent);background:var(--accent-light);}
+.bonus-chip .bc-name{font-size:12px;font-weight:600;}
+.bonus-chip .bc-sub{font-size:10px;color:var(--text-sec);margin-top:1px;}
 
-/* ===================== RESULTS ===================== */
-.results {
-  background: var(--card); border-radius: var(--radius);
-  padding: 20px; margin-bottom: 12px;
-  box-shadow: var(--shadow);
-  border: 2px solid var(--accent);
-}
-.result-total { text-align: center; margin-bottom: 18px; }
-.result-num {
-  font-size: 72px; font-weight: 900; color: var(--accent);
-  line-height: 1; font-variant-numeric: tabular-nums;
-}
-.result-unit { font-size: 16px; color: var(--text-sec); margin-top: 4px; }
-.result-limit { font-size: 17px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
-.breakdown { display: flex; flex-direction: column; gap: 6px; }
-.b-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 10px; border-radius: 8px; background: var(--bg);
-  font-size: 13px;
-}
-.b-item.b-limit { background: var(--accent-light); }
-.b-name { font-weight: 500; }
-.b-tai  { font-weight: 800; color: var(--accent); min-width: 32px; text-align: right; }
-.b-div  { height: 1px; background: var(--border); margin: 4px 0; }
-.b-total-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 10px; border-radius: 8px;
-  background: var(--accent); color: #fff;
-  font-size: 14px; font-weight: 700;
-}
+/* ── CALC BUTTON ── */
+.calc-btn{width:100%;padding:15px;border:none;border-radius:var(--radius);
+  background:var(--accent);color:#fff;font-size:16px;font-weight:700;
+  cursor:pointer;transition:background .15s,transform .1s;
+  box-shadow:0 4px 14px rgba(192,57,43,.3);margin-bottom:12px;}
+.calc-btn:hover{background:var(--accent-dark);}
+.calc-btn:active{transform:scale(.99);}
 
-/* ===================== ERROR / INFO ===================== */
-.msg {
-  padding: 12px 14px; border-radius: 10px;
-  font-size: 13px; margin-bottom: 12px;
-}
-.msg.warn { background: #fff8e1; border: 1px solid #ffd54f; color: #7a5800; }
-.msg.info { background: var(--accent-light); border: 1px solid var(--accent); color: var(--accent-dark); }
+/* ── SUBMIT ROUND BTN ── */
+.submit-round-btn{width:100%;padding:14px;border:none;border-radius:var(--radius);
+  background:#27ae60;color:#fff;font-size:15px;font-weight:700;
+  cursor:pointer;margin-bottom:12px;box-shadow:0 4px 14px rgba(39,174,96,.3);
+  display:none;transition:background .15s;}
+.submit-round-btn:hover{background:#219150;}
 
-/* ===================== RESET BTN ===================== */
-.reset-btn {
-  width: 100%; padding: 12px; border: 1.5px solid var(--border);
-  border-radius: var(--radius); background: #fff; cursor: pointer;
-  font-size: 14px; font-weight: 500; color: var(--text-sec);
-  transition: all .15s;
-}
-.reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* ── RESULTS ── */
+.results{background:var(--card);border-radius:var(--radius);padding:20px;
+  margin-bottom:12px;box-shadow:var(--shadow);border:2px solid var(--accent);}
+.result-total{text-align:center;margin-bottom:18px;}
+.result-num{font-size:72px;font-weight:900;color:var(--accent);
+  line-height:1;font-variant-numeric:tabular-nums;}
+.result-unit{font-size:16px;color:var(--text-sec);margin-top:4px;}
+.result-limit{font-size:17px;font-weight:700;color:var(--accent);margin-bottom:8px;}
+.breakdown{display:flex;flex-direction:column;gap:6px;}
+.b-item{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;border-radius:8px;background:var(--bg);font-size:13px;}
+.b-item.b-limit{background:var(--accent-light);}
+.b-name{font-weight:500;}
+.b-tai{font-weight:800;color:var(--accent);min-width:32px;text-align:right;}
+.b-div{height:1px;background:var(--border);margin:4px 0;}
+.b-total-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;border-radius:8px;background:var(--accent);color:#fff;
+  font-size:14px;font-weight:700;}
 
-/* ===================== USAGE COUNTER ===================== */
-.usage-bar {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 14px; margin-top: 8px;
-  background: var(--card); border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-.usage-icon { font-size: 18px; }
-.usage-text { font-size: 13px; color: var(--text-sec); }
-.usage-count {
-  font-size: 15px; font-weight: 800; color: var(--accent);
-  min-width: 28px; text-align: center;
-}
-.usage-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #4caf50; flex-shrink: 0;
-  animation: pulse 2s infinite;
-}
-@keyframes pulse {
-  0%,100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: .5; transform: scale(.8); }
-}
+/* ── MESSAGES ── */
+.msg{padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;}
+.msg.warn{background:#fff8e1;border:1px solid #ffd54f;color:#7a5800;}
 
-/* ===================== MODAL ===================== */
-.overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.5);
-  z-index: 300; display: flex; align-items: flex-end; justify-content: center;
-}
-.overlay.hide { display: none; }
-.modal {
-  background: #fff; border-radius: 20px 20px 0 0;
-  padding: 20px 16px 32px; width: 100%; max-width: 480px;
-  max-height: 88vh; overflow-y: auto;
-  animation: slideUp .22s ease;
-}
-@keyframes slideUp {
-  from { transform: translateY(24px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-.modal-head {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  margin-bottom: 4px;
-}
-.modal-title { font-size: 16px; font-weight: 700; }
-.modal-hint  { font-size: 12px; color: var(--text-sec); margin-top: 3px; }
-.modal-x {
-  width: 30px; height: 30px; border: none; background: var(--bg);
-  border-radius: 50%; cursor: pointer; font-size: 15px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.sect-lbl {
-  font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .8px; color: var(--text-sec);
-  margin: 14px 0 8px;
-}
-.tile-grid { display: flex; flex-wrap: wrap; gap: 7px; }
-.tile-grid .tile { width: 42px; height: 54px; }
-.tile-grid .tile .tn { font-size: 15px; }
-.tile-grid .tile .ts { font-size: 11px; }
-.chow-preview {
-  display: flex; gap: 5px; align-items: center;
-  background: var(--accent-light); border-radius: 10px;
-  padding: 10px 12px; margin: 10px 0 4px;
-}
-.chow-preview-lbl { font-size: 12px; color: var(--accent); font-weight: 600; margin-right: 4px; }
-.modal-ok {
-  width: 100%; padding: 13px; border: none; border-radius: 11px;
-  background: var(--accent); color: #fff;
-  font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px;
-  transition: background .15s;
-}
-.modal-ok:disabled { background: #ccc; cursor: not-allowed; }
-.modal-ok:not(:disabled):hover { background: var(--accent-dark); }
+/* ── RESET BTN ── */
+.reset-btn{width:100%;padding:12px;border:1.5px solid var(--border);
+  border-radius:var(--radius);background:#fff;cursor:pointer;
+  font-size:14px;font-weight:500;color:var(--text-sec);transition:all .15s;}
+.reset-btn:hover{border-color:var(--accent);color:var(--accent);}
 
-/* ===================== 13 WONDERS INFO ===================== */
-.wonders-info {
-  background: var(--accent-light); border-radius: 10px;
-  padding: 16px; text-align: center; color: var(--accent-dark);
-}
-.wonders-info .wi-icon { font-size: 28px; margin-bottom: 8px; }
-.wonders-info .wi-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-.wonders-info .wi-body { font-size: 12px; line-height: 1.6; }
-.wonders-info .wi-limit { font-size: 13px; font-weight: 700; margin-top: 10px; }
+/* ── USAGE COUNTER ── */
+.usage-bar{display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px;margin-top:8px;background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);}
+.usage-icon{font-size:18px;}
+.usage-text{font-size:13px;color:var(--text-sec);}
+.usage-count{font-size:15px;font-weight:800;color:var(--accent);
+  min-width:28px;text-align:center;}
+.usage-dot{width:6px;height:6px;border-radius:50%;background:#4caf50;
+  flex-shrink:0;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.8);}}
 
-/* ===================== RESPONSIVE ===================== */
-@media (min-width: 480px) {
-  .wrap { padding: 16px 0 0; }
-  .overlay { align-items: center; }
-  .modal { border-radius: 18px; margin-bottom: 20px; }
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;
+  display:flex;align-items:flex-end;justify-content:center;}
+.overlay.hide{display:none;}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;
+  width:100%;max-width:480px;max-height:88vh;overflow-y:auto;
+  animation:slideUp .22s ease;}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+.modal-title{font-size:16px;font-weight:700;}
+.modal-hint{font-size:12px;color:var(--text-sec);margin-top:3px;}
+.modal-x{width:30px;height:30px;border:none;background:var(--bg);border-radius:50%;
+  cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sect-lbl{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--text-sec);margin:14px 0 8px;}
+.tile-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.tile-grid .tile{width:42px;height:54px;}
+.tile-grid .tile .tn{font-size:15px;}
+.tile-grid .tile .ts{font-size:11px;}
+.chow-preview{display:flex;gap:5px;align-items:center;background:var(--accent-light);
+  border-radius:10px;padding:10px 12px;margin:10px 0 4px;}
+.chow-preview-lbl{font-size:12px;color:var(--accent);font-weight:600;margin-right:4px;}
+.modal-ok{width:100%;padding:13px;border:none;border-radius:11px;
+  background:var(--accent);color:#fff;font-size:15px;font-weight:700;
+  cursor:pointer;margin-top:16px;transition:background .15s;}
+.modal-ok:disabled{background:#ccc;cursor:not-allowed;}
+.modal-ok:not(:disabled):hover{background:var(--accent-dark);}
+
+/* ── 13 WONDERS ── */
+.wonders-info{background:var(--accent-light);border-radius:10px;padding:16px;
+  text-align:center;color:var(--accent-dark);}
+.wonders-info .wi-icon{font-size:28px;margin-bottom:8px;}
+.wonders-info .wi-title{font-size:15px;font-weight:700;margin-bottom:6px;}
+.wonders-info .wi-body{font-size:12px;line-height:1.6;}
+.wonders-info .wi-limit{font-size:13px;font-weight:700;margin-top:10px;}
+
+/* ── NAME MODAL ── */
+.name-input{width:100%;padding:13px 14px;border:1.5px solid var(--border);
+  border-radius:12px;font-size:16px;font-weight:600;margin:12px 0;}
+.name-input:focus{outline:none;border-color:var(--accent);}
+
+/* ── SUBMIT ROUND MODAL ── */
+.submit-section{margin-top:16px;}
+.submit-lbl{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--text-sec);margin-bottom:8px;}
+.player-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.player-chip{padding:8px 14px;border:1.5px solid var(--border);border-radius:100px;
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text-sec);transition:all .15s;}
+.player-chip.on{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+.payment-table{background:var(--bg);border-radius:10px;padding:12px;margin-top:8px;}
+.payment-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+.payment-row.total{border-top:1px solid var(--border);margin-top:4px;padding-top:8px;
+  font-weight:800;color:var(--accent);}
+.rate-row{display:flex;align-items:center;gap:8px;margin:8px 0 0;}
+.rate-label{font-size:13px;color:var(--text-sec);}
+.rate-input{width:70px;padding:6px 8px;border:1.5px solid var(--border);
+  border-radius:8px;font-size:14px;font-weight:700;text-align:center;color:var(--accent);}
+.rate-input:focus{outline:none;border-color:var(--accent);}
+
+/* ── HISTORY ── */
+.history-item{background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:6px;}
+.history-header{display:flex;justify-content:space-between;align-items:center;}
+.history-winner{font-size:13px;font-weight:700;}
+.history-tai{font-size:15px;font-weight:900;color:var(--accent);}
+.history-sub{font-size:11px;color:var(--text-sec);margin-top:2px;}
+
+/* ── SETUP WIZARD ── */
+.setup-step{background:var(--bg);border-radius:10px;padding:12px;
+  margin-bottom:10px;font-size:13px;line-height:1.6;}
+.setup-step strong{color:var(--accent);}
+.setup-step a{color:var(--accent);}
+.setup-config-input{width:100%;height:120px;padding:10px;
+  border:1.5px solid var(--border);border-radius:10px;
+  font-family:monospace;font-size:12px;resize:vertical;margin:10px 0;}
+.setup-config-input:focus{outline:none;border-color:var(--accent);}
+
+/* ── PLAYER SETUP MODAL ── */
+.player-setup-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.player-setup-num{width:26px;height:26px;border-radius:50%;background:var(--accent);
+  color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;}
+.player-setup-num.host{background:#f39c12;}
+.player-setup-input{flex:1;padding:10px 12px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:14px;font-weight:600;background:var(--bg);}
+.player-setup-input:focus{outline:none;border-color:var(--accent);background:#fff;}
+.player-remove{background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;
+  padding:4px 6px;border-radius:6px;flex-shrink:0;line-height:1;}
+.player-remove:hover{color:var(--accent);background:var(--accent-light);}
+.add-player-btn{width:100%;padding:10px;border:1.5px dashed var(--border);
+  border-radius:10px;background:none;cursor:pointer;font-size:13px;
+  color:var(--text-sec);margin:4px 0 12px;transition:all .15s;}
+.add-player-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── SCOREBOARD TALLY ── */
+.sc-tally{font-size:9px;color:var(--text-sec);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+@media(min-width:480px){
+  .wrap{padding:16px 0 0;}
+  .overlay{align-items:center;}
+  .modal{border-radius:18px;margin-bottom:20px;}
 }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <h1>🀄 Mahjong Tai Counter</h1>
-  <p>Singapore Style</p>
+<!-- ══ LANDING ══ -->
+<div id="landing">
+  <div class="landing-inner">
+    <div class="landing-logo">🀄</div>
+    <div class="landing-title">Mahjong Tai Counter</div>
+    <div class="landing-sub">Singapore Style · Play Together</div>
+
+    <button class="lbtn" onclick="showCreateRoom()">🎮 Create Room</button>
+
+    <div class="join-row">
+      <input class="join-input" id="join-code-input" placeholder="ROOM CODE"
+             maxlength="6" oninput="this.value=this.value.toUpperCase()">
+      <button class="join-go" onclick="showJoinRoom()">Join →</button>
+    </div>
+
+    <div class="landing-or">— or —</div>
+    <button class="lbtn ghost" onclick="soloMode()">Solo Mode (no room)</button>
+
+    <div style="margin-top:16px;font-size:11px;color:var(--text-sec)">
+      Multiplayer needs Firebase ·
+      <a href="#" onclick="showSetupWizard();return false;"
+         style="color:var(--accent)">Setup guide →</a>
+    </div>
+  </div>
 </div>
 
-<div class="wrap">
+<!-- ══ HEADER ══ -->
+<div class="header" id="app-header" style="display:none">
+  <h1>🀄 Mahjong Tai Counter</h1>
+  <p id="header-sub">Singapore Style</p>
+</div>
 
-  <!-- ══════════════ SETTINGS ══════════════ -->
+<!-- ══ ROOM BAR ══ -->
+<div id="room-bar" style="display:none">
+  <div class="room-code-row">
+    <span class="room-code-label">ROOM</span>
+    <span class="room-code-val" id="room-code-display">——</span>
+    <button class="room-btn" onclick="copyRoomCode()">📋 Copy</button>
+    <button class="room-btn" onclick="showHistory()">📜 History</button>
+    <button class="room-btn leave" onclick="leaveRoom()">✕ Leave</button>
+  </div>
+  <div class="scoreboard" id="scoreboard"></div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div class="wrap" id="app-wrap" style="display:none">
+
+  <!-- SETTINGS -->
   <div class="card">
     <div class="card-label">Settings</div>
-
     <div class="row">
       <div class="row-text">
         <div class="row-title">🌸 Flowers &amp; Seasons</div>
         <div class="row-sub">Flower and season bonus tiles</div>
       </div>
-      <label class="sw">
-        <input type="checkbox" id="sw-flowers" checked>
-        <span class="sw-track"></span>
-      </label>
+      <label class="sw"><input type="checkbox" id="sw-flowers" checked><span class="sw-track"></span></label>
     </div>
-
     <div class="row">
       <div class="row-text">
         <div class="row-title">🐱 Animals</div>
         <div class="row-sub">Cat, Rat, Cockerel, Centipede</div>
       </div>
-      <label class="sw">
-        <input type="checkbox" id="sw-animals" checked>
-        <span class="sw-track"></span>
-      </label>
+      <label class="sw"><input type="checkbox" id="sw-animals" checked><span class="sw-track"></span></label>
     </div>
-
     <div class="limit-row">
       <div class="row-text">
         <div class="row-title">Limit Hand Maximum</div>
@@ -411,8 +418,6 @@ body {
       </div>
       <input type="number" class="limit-input" id="limit-max" value="8" min="1" max="30">
     </div>
-
-    <!-- Seat wind -->
     <div style="margin-top:14px">
       <div class="card-label" style="margin-bottom:6px">Your Seat Wind</div>
       <div class="wind-row" id="seat-row">
@@ -422,8 +427,6 @@ body {
         <button class="wind-btn"    data-w="North" onclick="setSeat(this)"><span class="wc">北</span><span class="wn">North</span></button>
       </div>
     </div>
-
-    <!-- Round wind -->
     <div style="margin-top:12px">
       <div class="card-label" style="margin-bottom:6px">Prevailing Wind (Round)</div>
       <div class="wind-row" id="round-row">
@@ -435,7 +438,7 @@ body {
     </div>
   </div>
 
-  <!-- ══════════════ WIN TYPE ══════════════ -->
+  <!-- WIN TYPE -->
   <div class="card">
     <div class="card-label">How Did You Win?</div>
     <div class="chips">
@@ -449,18 +452,14 @@ body {
     </div>
   </div>
 
-  <!-- ══════════════ HAND BUILDER ══════════════ -->
+  <!-- HAND BUILDER -->
   <div class="card">
     <div class="card-label">Your Winning Hand</div>
-
-    <!-- Mode buttons -->
     <div class="modes">
-      <button class="mode-btn on" id="m-standard"  onclick="setMode('standard')">Standard</button>
-      <button class="mode-btn"    id="m-pairs"      onclick="setMode('pairs')">7 Pairs</button>
-      <button class="mode-btn"    id="m-thirteen"   onclick="setMode('thirteen')">13 Wonders</button>
+      <button class="mode-btn on" id="m-standard" onclick="setMode('standard')">Standard</button>
+      <button class="mode-btn"    id="m-pairs"    onclick="setMode('pairs')">7 Pairs</button>
+      <button class="mode-btn"    id="m-thirteen" onclick="setMode('thirteen')">13 Wonders</button>
     </div>
-
-    <!-- Standard hand -->
     <div id="hand-standard">
       <div class="sets-list" id="sets-list"></div>
       <div class="add-grid">
@@ -470,58 +469,45 @@ body {
         <button class="add-btn" id="btn-pair" onclick="openPicker('pair')">👥 Add Pair</button>
       </div>
     </div>
-
-    <!-- Seven pairs hand -->
     <div id="hand-pairs" style="display:none">
       <div class="sets-list" id="pairs-list"></div>
       <button class="add-btn add-full" id="btn-pair7" onclick="openPicker('pair7')" style="margin-top:10px">
         👥 Add Pair &nbsp;<span id="pair7-count" style="font-size:11px;opacity:.7">(0 / 7)</span>
       </button>
     </div>
-
-    <!-- Thirteen wonders -->
     <div id="hand-thirteen" style="display:none">
       <div class="wonders-info">
         <div class="wi-icon">⚡</div>
         <div class="wi-title">Thirteen Wonders (十三幺)</div>
-        <div class="wi-body">
-          One each of: 1 &amp; 9 Bamboo, 1 &amp; 9 Characters, 1 &amp; 9 Circles,
-          East, South, West, North, Red Dragon, Green Dragon, White Dragon
-          — plus one duplicate tile as the pair.
-        </div>
+        <div class="wi-body">One each of: 1 &amp; 9 Bamboo, 1 &amp; 9 Characters, 1 &amp; 9 Circles,
+          East, South, West, North, Red Dragon, Green Dragon, White Dragon — plus one duplicate tile as the pair.</div>
         <div class="wi-limit">⚡ This is a Limit Hand — press Count Tai below</div>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════ BONUS TILES ══════════════ -->
+  <!-- BONUS TILES -->
   <div class="card" id="bonus-card">
     <div class="card-label">Bonus Tiles</div>
-
     <div id="sec-flowers">
       <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:8px">
         🌸 Flowers &amp; Seasons &nbsp;<span style="font-weight:400;font-size:10px">★ = matches your seat</span>
       </div>
       <div class="bonus-group" id="flowers-grid"></div>
     </div>
-
     <div id="sec-animals" style="margin-top:13px">
-      <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:8px">
-        🐱 Animals
-      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:8px">🐱 Animals</div>
       <div class="bonus-group" id="animals-grid"></div>
     </div>
   </div>
 
-  <!-- ══════════════ CALCULATE ══════════════ -->
   <button class="calc-btn" onclick="calculate()">Count Tai →</button>
-
-  <!-- Results injected here -->
   <div id="results-area"></div>
-
+  <button class="submit-round-btn" id="submit-round-btn" onclick="openSubmitModal()">
+    ✅ Submit Round to Room →
+  </button>
   <button class="reset-btn" onclick="resetAll()">↺ Reset Hand</button>
 
-  <!-- Usage counter -->
   <div class="usage-bar">
     <span class="usage-icon">🀄</span>
     <span class="usage-text">Times counted:</span>
@@ -529,10 +515,9 @@ body {
     <span class="usage-dot" id="usage-dot" style="background:#ccc"></span>
   </div>
   <div style="height:16px"></div>
+</div>
 
-</div><!-- /wrap -->
-
-<!-- ══════════════ MODAL ══════════════ -->
+<!-- ══ TILE PICKER MODAL ══ -->
 <div class="overlay hide" id="overlay" onclick="overlayClick(event)">
   <div class="modal" id="modal">
     <div class="modal-head">
@@ -547,133 +532,687 @@ body {
   </div>
 </div>
 
+<!-- ══ NAME MODAL (join room) ══ -->
+<div class="overlay hide" id="name-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="name-modal-title">Enter Your Name</div>
+        <div class="modal-hint">This is how other players will see you</div>
+      </div>
+    </div>
+    <input class="name-input" id="player-name-input" placeholder="Your name..."
+           maxlength="16" onkeydown="if(event.key==='Enter')confirmName()">
+    <button class="modal-ok" onclick="confirmName()">Continue →</button>
+  </div>
+</div>
+
+<!-- ══ PLAYER SETUP MODAL (create room) ══ -->
+<div class="overlay hide" id="players-overlay" onclick="if(event.target===this)this.classList.add('hide')">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">👥 Set Up Players</div>
+        <div class="modal-hint">Enter all player names — you're Player 1</div>
+      </div>
+      <button class="modal-x" onclick="document.getElementById('players-overlay').classList.add('hide')">✕</button>
+    </div>
+    <div style="margin-top:14px" id="players-setup-list"></div>
+    <button class="add-player-btn" onclick="addPlayerField()">＋ Add Player (up to 6)</button>
+    <button class="modal-ok" onclick="confirmPlayers()">Create Room →</button>
+  </div>
+</div>
+
+<!-- ══ SUBMIT ROUND MODAL ══ -->
+<div class="overlay hide" id="submit-overlay" onclick="submitOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Submit Round</div>
+        <div class="modal-hint" id="submit-tai-display">— tai counted</div>
+      </div>
+      <button class="modal-x" onclick="closeSubmitModal()">✕</button>
+    </div>
+    <div class="submit-section">
+      <div class="submit-lbl">Who won this round?</div>
+      <div class="player-chips" id="winner-chips"></div>
+    </div>
+    <div class="submit-section" id="discard-section" style="display:none">
+      <div class="submit-lbl">Who discarded the winning tile?</div>
+      <div class="player-chips" id="discarder-chips"></div>
+    </div>
+    <div class="submit-section">
+      <div class="submit-lbl">Payment</div>
+      <div class="rate-row">
+        <span class="rate-label">$ </span>
+        <input class="rate-input" id="rate-input" type="number" value="1" min="0.5" step="0.5">
+        <span class="rate-label"> per tai</span>
+      </div>
+      <div class="payment-table" id="payment-table"></div>
+    </div>
+    <button class="modal-ok" onclick="confirmSubmitRound()">Confirm Round ✓</button>
+  </div>
+</div>
+
+<!-- ══ HISTORY MODAL ══ -->
+<div class="overlay hide" id="history-overlay"
+     onclick="if(event.target===this)this.classList.add('hide')">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Round History</div>
+        <div class="modal-hint" id="history-count">No rounds yet</div>
+      </div>
+      <button class="modal-x"
+              onclick="document.getElementById('history-overlay').classList.add('hide')">✕</button>
+    </div>
+    <div id="history-list" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ══ SETUP WIZARD MODAL ══ -->
+<div class="overlay hide" id="setup-overlay"
+     onclick="if(event.target===this)this.classList.add('hide')">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">🔧 Firebase Setup</div>
+        <div class="modal-hint">One-time setup for multiplayer rooms</div>
+      </div>
+      <button class="modal-x"
+              onclick="document.getElementById('setup-overlay').classList.add('hide')">✕</button>
+    </div>
+    <div style="padding:8px 0">
+      <div class="setup-step">
+        <strong>Step 1:</strong> Go to
+        <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>
+        and sign in with Google.
+      </div>
+      <div class="setup-step">
+        <strong>Step 2:</strong> Click <strong>Add project</strong>, name it (e.g. "yukmahjong"), complete the wizard.
+      </div>
+      <div class="setup-step">
+        <strong>Step 3:</strong> In your project go to <strong>Build → Realtime Database → Create database</strong>.
+        Choose a region, start in <strong>test mode</strong>.
+      </div>
+      <div class="setup-step">
+        <strong>Step 4:</strong> Go to <strong>Project Settings (⚙️) → General</strong>,
+        scroll to "Your apps", click the web icon <strong>&lt;/&gt;</strong>, register app,
+        then copy the <code>firebaseConfig</code> object and paste it below:
+      </div>
+      <textarea class="setup-config-input" id="firebase-config-input"
+        placeholder='Paste your firebaseConfig here, e.g.:
+{
+  apiKey: "AIzaSy...",
+  authDomain: "your-project.firebaseapp.com",
+  databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+  projectId: "your-project",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123:web:abc"
+}'></textarea>
+      <div id="setup-error" style="color:#e74c3c;font-size:12px;margin-top:4px;display:none"></div>
+    </div>
+    <button class="modal-ok" onclick="saveFirebaseConfig()">Save &amp; Connect →</button>
+  </div>
+</div>
+
+<!-- Firebase SDK (from gstatic — allowed on GitHub Pages) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <script>
+/* ============================================================
+   FIREBASE
+   ============================================================ */
+// Hardcoded config — paste here after setup to embed for all users:
+const FIREBASE_CONFIG_HARDCODED = {
+  apiKey: "AIzaSyAaXIGUxWC12GghMgve3IrZX-oR8kZM-C4",
+  authDomain: "yuk-mahjong.firebaseapp.com",
+  databaseURL: "https://yuk-mahjong-default-rtdb.firebaseio.com",
+  projectId: "yuk-mahjong",
+  storageBucket: "yuk-mahjong.firebasestorage.app",
+  messagingSenderId: "515802914649",
+  appId: "1:515802914649:web:401698389c996ff90ef648",
+  measurementId: "G-NEMLFVN063"
+};
+
+const FB_CONFIG_KEY = 'mj_fb_config';
+let db = null, fbReady = false;
+
+function initFirebase() {
+  let cfg = (FIREBASE_CONFIG_HARDCODED && FIREBASE_CONFIG_HARDCODED.apiKey)
+    ? FIREBASE_CONFIG_HARDCODED : null;
+  if (!cfg) {
+    try { const s = localStorage.getItem(FB_CONFIG_KEY); if (s) cfg = JSON.parse(s); } catch(e) {}
+  }
+  if (!cfg || !cfg.apiKey) return false;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    db = firebase.database();
+    fbReady = true;
+    return true;
+  } catch(e) { console.error('Firebase init:', e); return false; }
+}
+
+function saveFirebaseConfig() {
+  const raw = document.getElementById('firebase-config-input').value.trim();
+  const errEl = document.getElementById('setup-error');
+  errEl.style.display = 'none';
+  let cfg;
+  try { cfg = Function('"use strict";return (' + raw + ')')(); }
+  catch(e) { try { cfg = JSON.parse(raw); } catch(e2) {
+    errEl.textContent = 'Could not parse config. Paste the full firebaseConfig object.';
+    errEl.style.display = 'block'; return;
+  }}
+  if (!cfg.apiKey || !cfg.databaseURL) {
+    errEl.textContent = 'Missing apiKey or databaseURL. Make sure Realtime Database is enabled.';
+    errEl.style.display = 'block'; return;
+  }
+  try { localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(cfg)); } catch(e) {}
+  document.getElementById('setup-overlay').classList.add('hide');
+  if (initFirebase()) {
+    showToast('Firebase connected! Multiplayer ready 🎉');
+    if (pendingAction === 'create') { pendingAction = null; openPlayersModal(); }
+  } else showToast('Could not connect — check your config', true);
+}
+
+function showSetupWizard() {
+  document.getElementById('setup-overlay').classList.remove('hide');
+}
+
+/* ============================================================
+   ROOM STATE
+   ============================================================ */
+const ROOM = {
+  code: null, myId: null, myName: null,
+  isHost: false, players: {}, rounds: {}, status: 'landing',
+  _unsub: null,
+};
+let pendingAction = null;
+let lastTaiResult = null;
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function showLanding() {
+  document.getElementById('landing').style.display = 'flex';
+  document.getElementById('app-header').style.display = 'none';
+  document.getElementById('room-bar').style.display = 'none';
+  document.getElementById('app-wrap').style.display = 'none';
+  ROOM.status = 'landing';
+}
+
+function showApp(roomMode) {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app-header').style.display = 'block';
+  document.getElementById('app-wrap').style.display = 'block';
+  document.getElementById('room-bar').style.display = roomMode ? 'block' : 'none';
+  document.getElementById('header-sub').textContent =
+    roomMode ? 'Singapore Style · Room: ' + ROOM.code : 'Singapore Style';
+  document.getElementById('submit-round-btn').style.display = 'none';
+}
+
+function soloMode() { ROOM.status = 'solo'; showApp(false); }
+
+/* ============================================================
+   LANDING ACTIONS
+   ============================================================ */
+function showCreateRoom() {
+  if (!initFirebase()) { showSetupWizard(); pendingAction = 'create'; return; }
+  pendingAction = null;
+  openPlayersModal();
+}
+
+function showJoinRoom() {
+  const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  if (code.length < 4) { showToast('Enter a room code first', true); return; }
+  if (!initFirebase()) { showSetupWizard(); pendingAction = 'join_' + code; return; }
+  pendingAction = 'join_' + code;
+  openNameModal('Join Room — Your Name');
+}
+
+/* ============================================================
+   NAME MODAL
+   ============================================================ */
+function openNameModal(title) {
+  document.getElementById('name-modal-title').textContent = title;
+  const saved = '';
+  try { localStorage.getItem('mj_player_name') || ''; } catch(e) {}
+  document.getElementById('player-name-input').value =
+    (function(){ try { return localStorage.getItem('mj_player_name')||''; } catch(e){ return ''; }})();
+  document.getElementById('name-overlay').classList.remove('hide');
+  setTimeout(() => document.getElementById('player-name-input').focus(), 200);
+}
+
+function genId() {
+  return 'p_' + Date.now().toString(36) + Math.random().toString(36).substr(2,5);
+}
+
+function confirmName() {
+  const name = document.getElementById('player-name-input').value.trim();
+  if (!name) { showToast('Please enter your name', true); return; }
+  ROOM.myName = name;
+  try { localStorage.setItem('mj_player_name', name); } catch(e) {}
+  if (!ROOM.myId) { ROOM.myId = genId(); try { localStorage.setItem('mj_player_id', ROOM.myId); } catch(e) {} }
+  document.getElementById('name-overlay').classList.add('hide');
+  if (pendingAction && pendingAction.startsWith('join_')) doJoinRoom(pendingAction.slice(5));
+  pendingAction = null;
+}
+
+/* ── PLAYER SETUP MODAL ── */
+let setupPlayerList = [];
+
+function openPlayersModal() {
+  const savedName = (function(){ try { return localStorage.getItem('mj_player_name')||''; } catch(e){ return ''; }})();
+  setupPlayerList = [
+    { id: genId(), name: savedName },
+    { id: genId(), name: '' },
+    { id: genId(), name: '' },
+    { id: genId(), name: '' },
+  ];
+  renderPlayerSetup();
+  document.getElementById('players-overlay').classList.remove('hide');
+  setTimeout(() => { const el = document.querySelector('.player-setup-input'); if(el) el.focus(); }, 200);
+}
+
+function renderPlayerSetup() {
+  const list = document.getElementById('players-setup-list');
+  list.innerHTML = setupPlayerList.map((p, i) => `
+    <div class="player-setup-row" id="psr-${i}">
+      <div class="player-setup-num ${i===0?'host':''}">${i===0?'★':(i+1)}</div>
+      <input class="player-setup-input"
+             id="psi-${i}"
+             value="${p.name.replace(/"/g,'&quot;')}"
+             placeholder="${i===0 ? 'Your name (you are Player 1)' : 'Player '+(i+1)+' name'}"
+             maxlength="16"
+             oninput="setupPlayerList[${i}].name=this.value"
+             onkeydown="playerInputKey(event,${i})">
+      ${i >= 2 ? `<button class="player-remove" onclick="removePlayerField(${i})" title="Remove">✕</button>` : '<span style="width:26px"></span>'}
+    </div>
+  `).join('');
+}
+
+function playerInputKey(e, i) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const next = document.getElementById('psi-' + (i+1));
+    if (next) next.focus();
+    else confirmPlayers();
+  }
+}
+
+function addPlayerField() {
+  if (setupPlayerList.length >= 6) { showToast('Maximum 6 players', true); return; }
+  setupPlayerList.push({ id: genId(), name: '' });
+  renderPlayerSetup();
+  setTimeout(() => { const el = document.getElementById('psi-' + (setupPlayerList.length-1)); if(el) el.focus(); }, 100);
+}
+
+function removePlayerField(i) {
+  if (i < 2) return;
+  setupPlayerList.splice(i, 1);
+  renderPlayerSetup();
+}
+
+function confirmPlayers() {
+  // Sync input values
+  setupPlayerList.forEach((p, i) => {
+    const el = document.getElementById('psi-' + i);
+    if (el) p.name = el.value.trim();
+  });
+  const filled = setupPlayerList.filter(p => p.name);
+  if (filled.length < 2) { showToast('Enter at least 2 player names', true); return; }
+  // Host is always player 1
+  ROOM.myId = setupPlayerList[0].id;
+  ROOM.myName = setupPlayerList[0].name || 'Player 1';
+  try { localStorage.setItem('mj_player_name', ROOM.myName); } catch(e) {}
+  try { localStorage.setItem('mj_player_id', ROOM.myId); } catch(e) {}
+  document.getElementById('players-overlay').classList.add('hide');
+  doCreateRoom(filled);
+}
+
+/* ============================================================
+   FIREBASE ROOM OPS
+   ============================================================ */
+function genCode() {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += c[Math.floor(Math.random() * c.length)];
+  return s;
+}
+
+async function doCreateRoom(playerList) {
+  const code = genCode();
+  ROOM.code = code; ROOM.isHost = true; ROOM.status = 'room';
+  // Build players object from all names entered
+  const players = {};
+  (playerList || [{ id: ROOM.myId, name: ROOM.myName }]).forEach((p, i) => {
+    players[p.id] = {
+      name: p.name, score: 0, wins: 0, hu: 0, ximo: 0,
+      isHost: i === 0, joinedAt: Date.now(),
+    };
+  });
+  try {
+    await db.ref('rooms/' + code).set({ createdAt: Date.now(), status: 'playing', players });
+    listenRoom(code);
+    showApp(true);
+    document.getElementById('room-code-display').textContent = code;
+    showToast('Room created! Share code: ' + code);
+  } catch(e) { showToast('Failed to create room: ' + e.message, true); }
+}
+
+async function doJoinRoom(code) {
+  ROOM.code = code; ROOM.isHost = false; ROOM.status = 'room';
+  try {
+    await db.ref('rooms/' + code + '/players/' + ROOM.myId).set(
+      { name: ROOM.myName, score: 0, wins: 0, hu: 0, ximo: 0, isHost: false, joinedAt: Date.now() }
+    );
+    listenRoom(code);
+    showApp(true);
+    document.getElementById('room-code-display').textContent = code;
+    showToast('Joined room ' + code + '!');
+  } catch(e) { showToast('Could not join: ' + e.message, true); }
+}
+
+function listenRoom(code) {
+  if (ROOM._unsub) ROOM._unsub();
+  const ref = db.ref('rooms/' + code);
+  ref.on('value', snap => {
+    const data = snap.val();
+    if (!data) return;
+    ROOM.players = data.players || {};
+    ROOM.rounds  = data.rounds  || {};
+    renderScoreboard();
+  });
+  ROOM._unsub = () => ref.off('value');
+}
+
+function leaveRoom() {
+  if (ROOM._unsub) { ROOM._unsub(); ROOM._unsub = null; }
+  ROOM.code = null; ROOM.isHost = false; ROOM.status = 'landing';
+  ROOM.players = {}; ROOM.rounds = {};
+  resetAll(); showLanding();
+}
+
+function copyRoomCode() {
+  navigator.clipboard.writeText(ROOM.code)
+    .then(() => showToast('Code copied!'))
+    .catch(() => showToast('Code: ' + ROOM.code));
+}
+
+/* ============================================================
+   SCOREBOARD
+   ============================================================ */
+function renderScoreboard() {
+  const sb = document.getElementById('scoreboard');
+  if (!sb) return;
+  const players = Object.entries(ROOM.players)
+    .sort((a, b) => (b[1].score||0) - (a[1].score||0));
+  sb.innerHTML = players.map(([id, p]) => {
+    const sc = p.score || 0, isMe = id === ROOM.myId;
+    const cls = sc > 0 ? 'pos' : sc < 0 ? 'neg' : '';
+    const wins = p.wins || 0, hu = p.hu || 0, ximo = p.ximo || 0;
+    const tally = wins > 0
+      ? `<div class="sc-tally">🏆${wins}${hu?` 胡${hu}`:''}${ximo?` 自${ximo}`:''}</div>`
+      : '';
+    return `<div class="score-card${isMe?' me':''}${p.isHost?' host':''}">
+      <div class="sc-name">${isMe?'👤 ':''}${p.name}</div>
+      <div class="sc-score ${cls}">${sc>0?'+':''}${sc}</div>
+      ${tally}
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   SUBMIT ROUND MODAL
+   ============================================================ */
+let submitWinnerId = null, submitDiscarderId = null;
+
+function openSubmitModal() {
+  if (!lastTaiResult) return;
+  document.getElementById('submit-tai-display').textContent = lastTaiResult.total + ' tai counted';
+  submitWinnerId = ROOM.myId;
+  submitDiscarderId = null;
+  renderSubmitChips();
+  updatePaymentTable();
+  document.getElementById('discard-section').style.display =
+    (S.win.discard || S.win.robKong) ? '' : 'none';
+  document.getElementById('submit-overlay').classList.remove('hide');
+}
+
+function renderSubmitChips() {
+  const players = Object.entries(ROOM.players);
+  document.getElementById('winner-chips').innerHTML = players.map(([id, p]) =>
+    `<button class="player-chip${id===submitWinnerId?' on':''}" onclick="selectWinner('${id}')">${p.name}</button>`
+  ).join('');
+  document.getElementById('discarder-chips').innerHTML = players
+    .filter(([id]) => id !== submitWinnerId)
+    .map(([id, p]) =>
+      `<button class="player-chip${id===submitDiscarderId?' on':''}" onclick="selectDiscarder('${id}')">${p.name}</button>`
+    ).join('');
+}
+
+function selectWinner(id) {
+  submitWinnerId = id;
+  if (submitDiscarderId === id) submitDiscarderId = null;
+  renderSubmitChips(); updatePaymentTable();
+}
+function selectDiscarder(id) {
+  submitDiscarderId = (id === submitDiscarderId) ? null : id;
+  renderSubmitChips(); updatePaymentTable();
+}
+
+function updatePaymentTable() {
+  const tai = lastTaiResult ? lastTaiResult.total : 0;
+  const rate = parseFloat(document.getElementById('rate-input').value) || 1;
+  const players = Object.entries(ROOM.players);
+  const winner = ROOM.players[submitWinnerId];
+  const isDiscard = S.win.discard || S.win.robKong;
+  const el = document.getElementById('payment-table');
+  if (!winner) { el.innerHTML = '<div style="color:var(--text-sec);font-size:13px">Select a winner above</div>'; return; }
+  const amt = tai * rate;
+  let html = '';
+
+  if (isDiscard && submitDiscarderId) {
+    /* ── DISCARD WIN: only the discarder pays, everyone else pays $0 ── */
+    const discarder = ROOM.players[submitDiscarderId];
+    // discarder pays 3× (their own share × 3)
+    html += `<div class="payment-row">
+      <span>💸 <strong>${discarder ? discarder.name : '?'}</strong> (threw the tile)</span>
+      <span style="color:#e74c3c;font-weight:800">−$${(amt*3).toFixed(2)}</span>
+    </div>`;
+    // everyone else pays nothing
+    players.filter(([id]) => id !== submitWinnerId && id !== submitDiscarderId).forEach(([, p]) => {
+      html += `<div class="payment-row" style="color:var(--text-sec)">
+        <span>${p.name} (did not discard)</span><span>$0</span>
+      </div>`;
+    });
+    html += `<div class="payment-row total">
+      <span>🏆 ${winner.name} receives</span><span>+$${(amt*3).toFixed(2)}</span>
+    </div>`;
+    html += `<div style="font-size:11px;color:var(--text-sec);margin-top:6px;line-height:1.6">
+      <strong>Discard (胡)</strong> — discarder pays all 3 opponents' shares:<br>
+      ${tai} tai × $${rate} × 3 = <strong>$${(amt*3).toFixed(2)}</strong>
+    </div>`;
+  } else {
+    /* ── SELF-DRAW: every opponent pays the same amount ── */
+    const opponents = players.filter(([id]) => id !== submitWinnerId);
+    opponents.forEach(([, p]) => {
+      html += `<div class="payment-row">
+        <span>💸 <strong>${p.name}</strong></span>
+        <span style="color:#e74c3c;font-weight:800">−$${amt.toFixed(2)}</span>
+      </div>`;
+    });
+    html += `<div class="payment-row total">
+      <span>🏆 ${winner.name} receives</span><span>+$${(amt * opponents.length).toFixed(2)}</span>
+    </div>`;
+    html += `<div style="font-size:11px;color:var(--text-sec);margin-top:6px;line-height:1.6">
+      <strong>Self-draw (自摸)</strong> — each of ${opponents.length} opponents pays:<br>
+      ${tai} tai × $${rate} = <strong>$${amt.toFixed(2)}</strong> per person
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function closeSubmitModal() {
+  document.getElementById('submit-overlay').classList.add('hide');
+}
+function submitOverlayClick(e) {
+  if (e.target === document.getElementById('submit-overlay')) closeSubmitModal();
+}
+
+async function confirmSubmitRound() {
+  if (!submitWinnerId) { showToast('Select a winner', true); return; }
+  const tai = lastTaiResult.total;
+  const rate = parseFloat(document.getElementById('rate-input').value) || 1;
+  const amt = tai * rate;
+  const players = Object.entries(ROOM.players);
+  const isDiscard = S.win.discard || S.win.robKong;
+  const deltas = {};
+  players.forEach(([id]) => { deltas[id] = 0; });
+  if (isDiscard && submitDiscarderId) {
+    deltas[submitWinnerId]    += amt * 3;
+    deltas[submitDiscarderId] -= amt * 3;
+  } else {
+    players.forEach(([id]) => {
+      if (id === submitWinnerId) deltas[id] += amt * (players.length - 1);
+      else deltas[id] -= amt;
+    });
+  }
+  const isXimo = !(isDiscard && submitDiscarderId); // true = self-draw / ximo
+  const wType = isXimo ? 'ximo' : 'hu';
+  const round = {
+    roundNum: Object.keys(ROOM.rounds).length + 1,
+    winner: submitWinnerId,
+    winnerName: ROOM.players[submitWinnerId].name,
+    tai, breakdown: lastTaiResult.rows.map(r => r.name).join(', '),
+    winType: isXimo ? '自摸 (Ximo)' : '胡 (Hu)',
+    discarderName: submitDiscarderId ? (ROOM.players[submitDiscarderId]||{}).name : null,
+    deltas, timestamp: Date.now(),
+  };
+  try {
+    const updates = {};
+    players.forEach(([id, p]) => {
+      updates['rooms/' + ROOM.code + '/players/' + id + '/score'] = (p.score||0) + (deltas[id]||0);
+    });
+    // Track wins for winner
+    const winner = ROOM.players[submitWinnerId];
+    updates['rooms/' + ROOM.code + '/players/' + submitWinnerId + '/wins'] = (winner.wins||0) + 1;
+    updates['rooms/' + ROOM.code + '/players/' + submitWinnerId + '/' + wType] = (winner[wType]||0) + 1;
+    const rKey = db.ref('rooms/' + ROOM.code + '/rounds').push().key;
+    updates['rooms/' + ROOM.code + '/rounds/' + rKey] = round;
+    await db.ref().update(updates);
+    closeSubmitModal(); resetAll();
+    showToast('Round saved! ✅');
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+function showHistory() {
+  const rounds = Object.values(ROOM.rounds).sort((a,b) => (a.roundNum||0) - (b.roundNum||0));
+  document.getElementById('history-count').textContent = rounds.length + ' rounds played';
+  document.getElementById('history-list').innerHTML = rounds.length
+    ? rounds.map(r => `<div class="history-item">
+        <div class="history-header">
+          <span class="history-winner">🏆 ${r.winnerName}</span>
+          <span class="history-tai">${r.tai} tai</span>
+        </div>
+        <div class="history-sub">Round ${r.roundNum} · ${r.winType}${r.discarderName?' by '+r.discarderName:''}</div>
+        <div class="history-sub" style="margin-top:3px">${r.breakdown}</div>
+      </div>`).join('')
+    : '<div style="text-align:center;color:var(--text-sec);padding:20px">No rounds yet</div>';
+  document.getElementById('history-overlay').classList.remove('hide');
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function showToast(msg, isError) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div'); t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
+      'padding:10px 20px;border-radius:100px;font-size:13px;font-weight:600;color:#fff;' +
+      'z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;' +
+      'box-shadow:0 4px 12px rgba(0,0,0,.2);';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = isError ? '#e74c3c' : '#2c3e50';
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
 /* ============================================================
    DATA
    ============================================================ */
-
 const SUITS = {
-  Bam: { label: 'Bamboo',     ch: '竹', cls: 't-bam' },
-  Wan: { label: 'Characters', ch: '萬', cls: 't-wan' },
-  Pin: { label: 'Circles',    ch: '餅', cls: 't-pin' },
+  Bam:{label:'Bamboo',ch:'竹',cls:'t-bam'},
+  Wan:{label:'Characters',ch:'萬',cls:'t-wan'},
+  Pin:{label:'Circles',ch:'餅',cls:'t-pin'},
 };
-
-const WINDS = ['East','South','West','North'];
-const WIND_CH = { East:'東', South:'南', West:'西', North:'北' };
-
-const DRAGONS = [
-  { name:'Red',   ch:'中', cls:'t-dred' },
-  { name:'Green', ch:'發', cls:'t-dgrn' },
-  { name:'White', ch:'白', cls:'t-dwht' },
+const WINDS=['East','South','West','North'];
+const WIND_CH={East:'東',South:'南',West:'西',North:'北'};
+const DRAGONS=[{name:'Red',ch:'中',cls:'t-dred'},{name:'Green',ch:'發',cls:'t-dgrn'},{name:'White',ch:'白',cls:'t-dwht'}];
+const FLOWERS=[
+  {id:'f1',name:'Plum',ch:'梅',seat:'East',kind:'flower'},
+  {id:'f2',name:'Orchid',ch:'蘭',seat:'South',kind:'flower'},
+  {id:'f3',name:'Chrysanth.',ch:'菊',seat:'West',kind:'flower'},
+  {id:'f4',name:'Bamboo Fl.',ch:'竹',seat:'North',kind:'flower'},
+  {id:'s1',name:'Spring',ch:'春',seat:'East',kind:'season'},
+  {id:'s2',name:'Summer',ch:'夏',seat:'South',kind:'season'},
+  {id:'s3',name:'Autumn',ch:'秋',seat:'West',kind:'season'},
+  {id:'s4',name:'Winter',ch:'冬',seat:'North',kind:'season'},
 ];
-
-const FLOWERS = [
-  { id:'f1', name:'Plum',         ch:'梅', seat:'East',  kind:'flower' },
-  { id:'f2', name:'Orchid',       ch:'蘭', seat:'South', kind:'flower' },
-  { id:'f3', name:'Chrysanth.',   ch:'菊', seat:'West',  kind:'flower' },
-  { id:'f4', name:'Bamboo Fl.',   ch:'竹', seat:'North', kind:'flower' },
-  { id:'s1', name:'Spring',       ch:'春', seat:'East',  kind:'season' },
-  { id:'s2', name:'Summer',       ch:'夏', seat:'South', kind:'season' },
-  { id:'s3', name:'Autumn',       ch:'秋', seat:'West',  kind:'season' },
-  { id:'s4', name:'Winter',       ch:'冬', seat:'North', kind:'season' },
-];
-
-const ANIMALS = [
-  { id:'a1', name:'Cat',       em:'🐱' },
-  { id:'a2', name:'Rat',       em:'🐭' },
-  { id:'a3', name:'Cockerel',  em:'🐓' },
-  { id:'a4', name:'Centipede', em:'🐛' },
-];
+const ANIMALS=[{id:'a1',name:'Cat',em:'🐱'},{id:'a2',name:'Rat',em:'🐭'},{id:'a3',name:'Cockerel',em:'🐓'},{id:'a4',name:'Centipede',em:'🐛'}];
 
 /* ============================================================
    STATE
    ============================================================ */
 const S = {
-  useFlowers: true,
-  useAnimals: true,
-  limitMax:   8,
-  seat:       'East',
-  round:      'East',
-
-  win: {
-    selfDraw:    true,
-    discard:     false,
-    lastTile:    false,
-    kongReplace: false,
-    robKong:     false,
-    heavenly:    false,
-    earthly:     false,
-  },
-
-  mode:   'standard', // standard | pairs | thirteen
-  sets:   [],         // [{type:'pong'|'kong'|'chow', tile:{...}}]
-  pair:   null,       // {tile:{...}}
-  pairs7: [],         // [{tile:{...}}]
-
-  flowers: new Set(),
-  animals: new Set(),
+  useFlowers:true, useAnimals:true, limitMax:8, seat:'East', round:'East',
+  win:{selfDraw:true,discard:false,lastTile:false,kongReplace:false,robKong:false,heavenly:false,earthly:false},
+  mode:'standard', sets:[], pair:null, pairs7:[], flowers:new Set(), animals:new Set(),
 };
-
-/* active picker */
-let picker = { type: null, tile: null };
+let picker={type:null,tile:null};
 
 /* ============================================================
-   SETTINGS LISTENERS
+   SETTINGS
    ============================================================ */
-document.getElementById('sw-flowers').addEventListener('change', e => {
-  S.useFlowers = e.target.checked;
-  renderBonus();
-  syncBonusCard();
-});
-document.getElementById('sw-animals').addEventListener('change', e => {
-  S.useAnimals = e.target.checked;
-  renderBonus();
-  syncBonusCard();
-});
-document.getElementById('limit-max').addEventListener('change', e => {
-  S.limitMax = Math.max(1, parseInt(e.target.value) || 8);
-  e.target.value = S.limitMax;
-});
-
-function setSeat(btn) {
-  document.querySelectorAll('#seat-row .wind-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  S.seat = btn.dataset.w;
-  renderBonus();
-}
-function setRound(btn) {
-  document.querySelectorAll('#round-row .wind-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  S.round = btn.dataset.w;
-}
+document.getElementById('sw-flowers').addEventListener('change',e=>{S.useFlowers=e.target.checked;renderBonus();syncBonusCard();});
+document.getElementById('sw-animals').addEventListener('change',e=>{S.useAnimals=e.target.checked;renderBonus();syncBonusCard();});
+document.getElementById('limit-max').addEventListener('change',e=>{S.limitMax=Math.max(1,parseInt(e.target.value)||8);e.target.value=S.limitMax;});
+function setSeat(btn){document.querySelectorAll('#seat-row .wind-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.seat=btn.dataset.w;renderBonus();}
+function setRound(btn){document.querySelectorAll('#round-row .wind-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.round=btn.dataset.w;}
 
 /* ============================================================
    WIN TYPE
    ============================================================ */
-function toggleWin(key) {
-  if (key === 'discard' || key === 'selfDraw') {
-    S.win.discard = false; S.win.selfDraw = false;
-  }
-  S.win[key] = !S.win[key];
-  if ((key === 'heavenly' || key === 'earthly') && S.win[key]) {
-    S.win.selfDraw = true; S.win.discard = false;
-  }
+function toggleWin(key){
+  if(key==='discard'||key==='selfDraw'){S.win.discard=false;S.win.selfDraw=false;}
+  S.win[key]=!S.win[key];
+  if((key==='heavenly'||key==='earthly')&&S.win[key]){S.win.selfDraw=true;S.win.discard=false;}
   renderWinChips();
 }
-function renderWinChips() {
-  ['discard','selfDraw','lastTile','kongReplace','robKong','heavenly','earthly'].forEach(k => {
-    document.getElementById('c-' + k).classList.toggle('on', !!S.win[k]);
+function renderWinChips(){
+  ['discard','selfDraw','lastTile','kongReplace','robKong','heavenly','earthly'].forEach(k=>{
+    document.getElementById('c-'+k).classList.toggle('on',!!S.win[k]);
   });
 }
 
 /* ============================================================
    HAND MODE
    ============================================================ */
-function setMode(m) {
-  S.mode = m;
-  ['standard','pairs','thirteen'].forEach(x => {
-    document.getElementById('m-' + x).classList.toggle('on', x === m);
-    document.getElementById('hand-' + x).style.display = x === m ? '' : 'none';
+function setMode(m){
+  S.mode=m;
+  ['standard','pairs','thirteen'].forEach(x=>{
+    document.getElementById('m-'+x).classList.toggle('on',x===m);
+    document.getElementById('hand-'+x).style.display=x===m?'':'none';
   });
   clearResults();
 }
@@ -681,590 +1220,395 @@ function setMode(m) {
 /* ============================================================
    TILE HELPERS
    ============================================================ */
-function tileKey(t) {
-  if (t.suit) return `${t.suit}${t.num}`;
-  if (t.wind) return `W${t.wind}`;
-  if (t.drag) return `D${t.drag}`;
-  return JSON.stringify(t);
+function makeTileEl(t,size,extra){
+  size=size||'sm';extra=extra||'';
+  let cls,tn,ts='';
+  if(t.suit){cls=SUITS[t.suit].cls;tn=t.num;ts=SUITS[t.suit].ch;}
+  else if(t.wind){cls='t-wind';tn=WIND_CH[t.wind];}
+  else if(t.drag){const d=DRAGONS.find(x=>x.name===t.drag);cls=d.cls;tn=d.ch;}
+  const w=size==='lg'?'width:42px;height:54px':'width:34px;height:44px';
+  return`<div class="tile ${cls} ${extra}" style="${w}"><span class="tn">${tn}</span>${ts?`<span class="ts">${ts}</span>`:''}</div>`;
 }
-
-function makeTileEl(t, size = 'sm', extra = '') {
-  let cls, tn, ts = '';
-  if (t.suit) {
-    cls = SUITS[t.suit].cls;
-    tn  = t.num;
-    ts  = SUITS[t.suit].ch;
-  } else if (t.wind) {
-    cls = 't-wind'; tn = WIND_CH[t.wind];
-  } else if (t.drag) {
-    const d = DRAGONS.find(x => x.name === t.drag);
-    cls = d.cls; tn = d.ch;
-  }
-  const w = size === 'lg' ? 'width:42px;height:54px' : 'width:34px;height:44px';
-  return `<div class="tile ${cls} ${extra}" style="${w}">
-    <span class="tn">${tn}</span>${ts ? `<span class="ts">${ts}</span>` : ''}
-  </div>`;
-}
-
-function setTiles(set) {
-  if (set.type === 'pong') return [set.tile, set.tile, set.tile];
-  if (set.type === 'kong') return [set.tile, set.tile, set.tile, set.tile];
-  if (set.type === 'chow') {
-    const n = set.tile.num;
-    return [{suit:set.tile.suit,num:n},{suit:set.tile.suit,num:n+1},{suit:set.tile.suit,num:n+2}];
-  }
-  return [];
+function setTiles(set){
+  if(set.type==='pong')return[set.tile,set.tile,set.tile];
+  if(set.type==='kong')return[set.tile,set.tile,set.tile,set.tile];
+  if(set.type==='chow'){const n=set.tile.num;return[{suit:set.tile.suit,num:n},{suit:set.tile.suit,num:n+1},{suit:set.tile.suit,num:n+2}];}
+  return[];
 }
 
 /* ============================================================
    RENDER HAND
    ============================================================ */
-function renderHand() {
-  renderStandardHand();
-  renderPairs7Hand();
-}
-
-function renderStandardHand() {
-  const list = document.getElementById('sets-list');
-  let html = '';
-
-  S.sets.forEach((set, i) => {
-    const tiles = setTiles(set).map(t => makeTileEl(t)).join('');
-    const lbl = set.type.toUpperCase();
-    html += `<div class="set-row filled">
-      <span class="set-badge">${lbl}</span>
+function renderHand(){renderStandardHand();renderPairs7Hand();}
+function renderStandardHand(){
+  const list=document.getElementById('sets-list');
+  let html='';
+  S.sets.forEach((set,i)=>{
+    const tiles=setTiles(set).map(t=>makeTileEl(t)).join('');
+    html+=`<div class="set-row filled"><span class="set-badge">${set.type.toUpperCase()}</span>
       <div class="tiles-wrap">${tiles}</div>
-      <button class="del-btn" onclick="removeSet(${i})" title="Remove">✕</button>
-    </div>`;
+      <button class="del-btn" onclick="removeSet(${i})">✕</button></div>`;
   });
-
-  if (S.pair) {
-    const tiles = makeTileEl(S.pair.tile) + makeTileEl(S.pair.tile);
-    html += `<div class="set-row filled">
-      <span class="set-badge">PAIR</span>
-      <div class="tiles-wrap">${tiles}</div>
-      <button class="del-btn" onclick="removePair()" title="Remove">✕</button>
-    </div>`;
+  if(S.pair){
+    html+=`<div class="set-row filled"><span class="set-badge">PAIR</span>
+      <div class="tiles-wrap">${makeTileEl(S.pair.tile)+makeTileEl(S.pair.tile)}</div>
+      <button class="del-btn" onclick="removePair()">✕</button></div>`;
   } else {
-    html += `<div class="empty-hint">No pair yet — tap Add Pair below</div>`;
+    html+=`<div class="empty-hint">No pair yet — tap Add Pair below</div>`;
   }
-
-  list.innerHTML = html;
-
-  // update button states
-  const full = S.sets.length >= 4;
-  document.getElementById('btn-pong').disabled = full;
-  document.getElementById('btn-kong').disabled = full;
-  document.getElementById('btn-chow').disabled = full;
-  document.getElementById('btn-pair').disabled = !!S.pair;
+  list.innerHTML=html;
+  const full=S.sets.length>=4;
+  document.getElementById('btn-pong').disabled=full;
+  document.getElementById('btn-kong').disabled=full;
+  document.getElementById('btn-chow').disabled=full;
+  document.getElementById('btn-pair').disabled=!!S.pair;
 }
-
-function renderPairs7Hand() {
-  const list  = document.getElementById('pairs-list');
-  const count = document.getElementById('pair7-count');
-  const btn   = document.getElementById('btn-pair7');
-
-  let html = '';
-  S.pairs7.forEach((p, i) => {
-    const tiles = makeTileEl(p.tile) + makeTileEl(p.tile);
-    html += `<div class="set-row filled">
-      <span class="set-badge">PAIR</span>
-      <div class="tiles-wrap">${tiles}</div>
-      <button class="del-btn" onclick="removePair7(${i})" title="Remove">✕</button>
-    </div>`;
+function renderPairs7Hand(){
+  const list=document.getElementById('pairs-list'),count=document.getElementById('pair7-count');
+  let html='';
+  S.pairs7.forEach((p,i)=>{
+    html+=`<div class="set-row filled"><span class="set-badge">PAIR</span>
+      <div class="tiles-wrap">${makeTileEl(p.tile)+makeTileEl(p.tile)}</div>
+      <button class="del-btn" onclick="removePair7(${i})">✕</button></div>`;
   });
-  if (!html) html = `<div class="empty-hint">Add 7 pairs below</div>`;
-  list.innerHTML = html;
-  count.textContent = `(${S.pairs7.length} / 7)`;
-  btn.disabled = S.pairs7.length >= 7;
+  if(!html)html=`<div class="empty-hint">Add 7 pairs below</div>`;
+  list.innerHTML=html;
+  count.textContent=`(${S.pairs7.length} / 7)`;
+  document.getElementById('btn-pair7').disabled=S.pairs7.length>=7;
 }
-
-function removeSet(i) { S.sets.splice(i, 1); renderHand(); clearResults(); }
-function removePair()  { S.pair = null;       renderHand(); clearResults(); }
-function removePair7(i){ S.pairs7.splice(i,1); renderPairs7Hand(); clearResults(); }
+function removeSet(i){S.sets.splice(i,1);renderHand();clearResults();}
+function removePair(){S.pair=null;renderHand();clearResults();}
+function removePair7(i){S.pairs7.splice(i,1);renderPairs7Hand();clearResults();}
 
 /* ============================================================
    BONUS TILES
    ============================================================ */
-function renderBonus() {
-  // Flowers
-  const fg = document.getElementById('flowers-grid');
-  document.getElementById('sec-flowers').style.display = S.useFlowers ? '' : 'none';
-  if (S.useFlowers) {
-    fg.innerHTML = FLOWERS.map(f => {
-      const on   = S.flowers.has(f.id);
-      const star = f.seat === S.seat ? ' ★' : '';
-      return `<button class="bonus-chip ${on?'on':''}" onclick="toggleFlower('${f.id}')">
-        <div class="tile t-flower" style="width:30px;height:38px">
-          <span class="tn" style="font-size:13px">${f.ch}</span>
-        </div>
-        <div>
-          <div class="bc-name">${f.name}${star}</div>
-          <div class="bc-sub">${f.kind==='flower'?'🌸':'🍂'} ${f.seat}</div>
-        </div>
+function renderBonus(){
+  document.getElementById('sec-flowers').style.display=S.useFlowers?'':'none';
+  if(S.useFlowers){
+    document.getElementById('flowers-grid').innerHTML=FLOWERS.map(f=>{
+      const on=S.flowers.has(f.id),star=f.seat===S.seat?' ★':'';
+      return`<button class="bonus-chip ${on?'on':''}" onclick="toggleFlower('${f.id}')">
+        <div class="tile t-flower" style="width:30px;height:38px"><span class="tn" style="font-size:13px">${f.ch}</span></div>
+        <div><div class="bc-name">${f.name}${star}</div><div class="bc-sub">${f.kind==='flower'?'🌸':'🍂'} ${f.seat}</div></div>
       </button>`;
     }).join('');
   }
-
-  // Animals
-  const ag = document.getElementById('animals-grid');
-  document.getElementById('sec-animals').style.display = S.useAnimals ? '' : 'none';
-  if (S.useAnimals) {
-    ag.innerHTML = ANIMALS.map(a => {
-      const on = S.animals.has(a.id);
-      return `<button class="bonus-chip ${on?'on':''}" onclick="toggleAnimal('${a.id}')">
-        <div class="tile t-animal" style="width:30px;height:38px">
-          <span class="tn" style="font-size:16px">${a.em}</span>
-        </div>
-        <div>
-          <div class="bc-name">${a.name}</div>
-          <div class="bc-sub">+1 tai</div>
-        </div>
+  document.getElementById('sec-animals').style.display=S.useAnimals?'':'none';
+  if(S.useAnimals){
+    document.getElementById('animals-grid').innerHTML=ANIMALS.map(a=>{
+      const on=S.animals.has(a.id);
+      return`<button class="bonus-chip ${on?'on':''}" onclick="toggleAnimal('${a.id}')">
+        <div class="tile t-animal" style="width:30px;height:38px"><span class="tn" style="font-size:16px">${a.em}</span></div>
+        <div><div class="bc-name">${a.name}</div><div class="bc-sub">+1 tai</div></div>
       </button>`;
     }).join('');
   }
 }
+function syncBonusCard(){document.getElementById('bonus-card').style.display=(S.useFlowers||S.useAnimals)?'':'none';}
+function toggleFlower(id){S.flowers.has(id)?S.flowers.delete(id):S.flowers.add(id);renderBonus();}
+function toggleAnimal(id){S.animals.has(id)?S.animals.delete(id):S.animals.add(id);renderBonus();}
 
-function syncBonusCard() {
-  document.getElementById('bonus-card').style.display =
-    (S.useFlowers || S.useAnimals) ? '' : 'none';
+/* ============================================================
+   TILE USAGE TRACKING  (prevents duplicate tiles in a hand)
+   ============================================================ */
+function tileKey(t) {
+  if (t.suit) return t.suit + ':' + t.num;
+  if (t.wind) return 'wind:' + t.wind;
+  if (t.drag) return 'drag:' + t.drag;
+  return '?';
 }
 
-function toggleFlower(id) {
-  S.flowers.has(id) ? S.flowers.delete(id) : S.flowers.add(id);
-  renderBonus();
+function getTileUsage() {
+  const usage = {};
+  function add(t, n) { const k = tileKey(t); usage[k] = (usage[k]||0) + n; }
+  const activeSets = S.mode === 'pairs' ? [] : S.sets;
+  activeSets.forEach(s => {
+    if (s.type === 'pong') add(s.tile, 3);
+    else if (s.type === 'kong') add(s.tile, 4);
+    else if (s.type === 'chow') {
+      for (let i = 0; i < 3; i++) add({suit:s.tile.suit, num:s.tile.num+i}, 1);
+    }
+  });
+  if (S.pair) add(S.pair.tile, 2);
+  S.pairs7.forEach(p => add(p.tile, 2));
+  return usage;
 }
-function toggleAnimal(id) {
-  S.animals.has(id) ? S.animals.delete(id) : S.animals.add(id);
-  renderBonus();
+
+function canPickTile(t, type, usage) {
+  const avail = k => 4 - (usage[k] || 0);
+  const k = tileKey(t);
+  if (type === 'pong')  return avail(k) >= 3;
+  if (type === 'kong')  return avail(k) >= 4;
+  if (type === 'pair' || type === 'pair7') return avail(k) >= 2;
+  if (type === 'chow') {
+    if (!t.suit || t.num > 7) return false;
+    return avail(tileKey({suit:t.suit, num:t.num}))   >= 1 &&
+           avail(tileKey({suit:t.suit, num:t.num+1})) >= 1 &&
+           avail(tileKey({suit:t.suit, num:t.num+2})) >= 1;
+  }
+  return true;
 }
 
 /* ============================================================
    TILE PICKER MODAL
    ============================================================ */
-const PICKER_META = {
-  pong:  { title: 'Add Pong',  hint: 'Pick the tile — app will show 3 of the same' },
-  kong:  { title: 'Add Kong',  hint: 'Pick the tile — app will show 4 of the same' },
-  chow:  { title: 'Add Chow',  hint: 'Pick the LOWEST tile of the 3-tile run' },
-  pair:  { title: 'Add Pair',  hint: 'Pick the tile — app will show 2 of the same' },
-  pair7: { title: 'Add Pair',  hint: 'Pick the tile for this pair' },
+const PICKER_META={
+  pong:{title:'Add Pong',hint:'Pick the tile — app shows 3 of the same'},
+  kong:{title:'Add Kong',hint:'Pick the tile — app shows 4 of the same'},
+  chow:{title:'Add Chow',hint:'Pick the LOWEST tile of the run'},
+  pair:{title:'Add Pair',hint:'Pick the tile — app shows 2 of the same'},
+  pair7:{title:'Add Pair',hint:'Pick the tile for this pair'},
 };
-
-function openPicker(type) {
-  picker = { type, tile: null };
-  document.getElementById('modal-title').textContent = PICKER_META[type].title;
-  document.getElementById('modal-hint').textContent  = PICKER_META[type].hint;
-  document.getElementById('modal-ok').disabled = true;
+function openPicker(type){
+  picker={type,tile:null};
+  document.getElementById('modal-title').textContent=PICKER_META[type].title;
+  document.getElementById('modal-hint').textContent=PICKER_META[type].hint;
+  document.getElementById('modal-ok').disabled=true;
   renderPickerBody(type);
   document.getElementById('overlay').classList.remove('hide');
 }
-
-function renderPickerBody(type) {
-  const body = document.getElementById('modal-body');
-  let html = '';
-
-  // Numbered suits
-  Object.entries(SUITS).forEach(([suit, meta]) => {
-    html += `<div class="sect-lbl">${meta.label}</div><div class="tile-grid">`;
-    for (let n = 1; n <= 9; n++) {
-      const t   = { suit, num: n };
-      const dim = (type === 'chow' && n > 7) ? 'dim' : 'click';
-      html += `<div class="tile ${meta.cls} ${dim}" data-tile='${JSON.stringify(t)}'>
-        <span class="tn">${n}</span><span class="ts">${meta.ch}</span>
-      </div>`;
+function renderPickerBody(type){
+  const usage = getTileUsage();
+  const body=document.getElementById('modal-body');
+  let html='';
+  Object.entries(SUITS).forEach(([suit,meta])=>{
+    html+=`<div class="sect-lbl">${meta.label}</div><div class="tile-grid">`;
+    for(let n=1;n<=9;n++){
+      const t={suit,num:n};
+      const ok = canPickTile(t, type, usage);
+      html+=`<div class="tile ${meta.cls} ${ok?'click':'dim'}" data-tile='${JSON.stringify(t)}'><span class="tn">${n}</span><span class="ts">${meta.ch}</span></div>`;
     }
-    html += `</div>`;
+    html+=`</div>`;
   });
-
-  // Honors (not for chow)
-  if (type !== 'chow') {
-    html += `<div class="sect-lbl">Winds</div><div class="tile-grid">`;
-    WINDS.forEach(w => {
-      const t = { wind: w };
-      html += `<div class="tile t-wind click" data-tile='${JSON.stringify(t)}'>
-        <span class="tn">${WIND_CH[w]}</span>
-      </div>`;
+  if(type!=='chow'){
+    html+=`<div class="sect-lbl">Winds</div><div class="tile-grid">`;
+    WINDS.forEach(w=>{
+      const t={wind:w};
+      const ok = canPickTile(t, type, usage);
+      html+=`<div class="tile t-wind ${ok?'click':'dim'}" data-tile='${JSON.stringify(t)}'><span class="tn">${WIND_CH[w]}</span></div>`;
     });
-    html += `</div>`;
-
-    html += `<div class="sect-lbl">Dragons</div><div class="tile-grid">`;
-    DRAGONS.forEach(d => {
-      const t = { drag: d.name };
-      html += `<div class="tile ${d.cls} click" data-tile='${JSON.stringify(t)}'>
-        <span class="tn">${d.ch}</span>
-      </div>`;
+    html+=`</div><div class="sect-lbl">Dragons</div><div class="tile-grid">`;
+    DRAGONS.forEach(d=>{
+      const t={drag:d.name};
+      const ok = canPickTile(t, type, usage);
+      html+=`<div class="tile ${d.cls} ${ok?'click':'dim'}" data-tile='${JSON.stringify(t)}'><span class="tn">${d.ch}</span></div>`;
     });
-    html += `</div>`;
+    html+=`</div>`;
   }
-
-  body.innerHTML = html;
-
-  // delegate clicks
-  body.onclick = e => {
-    const el = e.target.closest('.tile.click');
-    if (!el) return;
-    const t = JSON.parse(el.dataset.tile);
-    pickTile(t, el);
+  body.innerHTML=html;
+  body.onclick=e=>{
+    const el=e.target.closest('.tile.click');
+    if(!el)return;
+    pickTile(JSON.parse(el.dataset.tile),el);
   };
 }
-
-function pickTile(t, el) {
-  picker.tile = t;
-  document.querySelectorAll('#modal-body .tile.sel').forEach(x => x.classList.remove('sel'));
+function pickTile(t,el){
+  picker.tile=t;
+  document.querySelectorAll('#modal-body .tile.sel').forEach(x=>x.classList.remove('sel'));
   el.classList.add('sel');
-  document.getElementById('modal-ok').disabled = false;
+  document.getElementById('modal-ok').disabled=false;
   renderChowPreview(t);
 }
-
-function renderChowPreview(t) {
-  const old = document.getElementById('chow-prev');
-  if (old) old.remove();
-  if (picker.type !== 'chow') return;
-
-  const n = t.num;
-  const tiles = [0,1,2].map(o => makeTileEl({suit:t.suit, num:n+o},'sm')).join('');
-  const div = document.createElement('div');
-  div.id = 'chow-prev';
-  div.className = 'chow-preview';
-  div.innerHTML = `<span class="chow-preview-lbl">Chow:</span>${tiles}`;
-  document.getElementById('modal-body').insertAdjacentElement('afterend', div);
+function renderChowPreview(t){
+  const old=document.getElementById('chow-prev');if(old)old.remove();
+  if(picker.type!=='chow')return;
+  const n=t.num,tiles=[0,1,2].map(o=>makeTileEl({suit:t.suit,num:n+o})).join('');
+  const div=document.createElement('div');
+  div.id='chow-prev';div.className='chow-preview';
+  div.innerHTML=`<span class="chow-preview-lbl">Chow:</span>${tiles}`;
+  document.getElementById('modal-body').insertAdjacentElement('afterend',div);
 }
-
-function confirmPick() {
-  if (!picker.tile) return;
-  const t = picker.tile;
-
-  if (picker.type === 'pong') {
-    S.sets.push({ type:'pong', tile: t });
-  } else if (picker.type === 'kong') {
-    S.sets.push({ type:'kong', tile: t });
-  } else if (picker.type === 'chow') {
-    S.sets.push({ type:'chow', tile: t }); // tile.num = lowest of the run
-  } else if (picker.type === 'pair') {
-    S.pair = { tile: t };
-  } else if (picker.type === 'pair7') {
-    S.pairs7.push({ tile: t });
-  }
-
-  closePicker();
-  renderHand();
-  clearResults();
+function confirmPick(){
+  if(!picker.tile)return;
+  const t=picker.tile;
+  if(picker.type==='pong')S.sets.push({type:'pong',tile:t});
+  else if(picker.type==='kong')S.sets.push({type:'kong',tile:t});
+  else if(picker.type==='chow')S.sets.push({type:'chow',tile:t});
+  else if(picker.type==='pair')S.pair={tile:t};
+  else if(picker.type==='pair7')S.pairs7.push({tile:t});
+  closePicker();renderHand();clearResults();
 }
-
-function closePicker() {
+function closePicker(){
   document.getElementById('overlay').classList.add('hide');
-  const p = document.getElementById('chow-prev');
-  if (p) p.remove();
-  picker = { type: null, tile: null };
+  const p=document.getElementById('chow-prev');if(p)p.remove();
+  picker={type:null,tile:null};
 }
-
-function overlayClick(e) {
-  if (e.target === document.getElementById('overlay')) closePicker();
-}
+function overlayClick(e){if(e.target===document.getElementById('overlay'))closePicker();}
 
 /* ============================================================
    SCORING ENGINE
    ============================================================ */
-
-function allTilesFlat(sets, pair) {
-  const tiles = [];
-  sets.forEach(s => {
-    const ts = setTiles(s);
-    ts.forEach(t => tiles.push(t));
-  });
-  if (pair) { tiles.push(pair.tile); tiles.push(pair.tile); }
+function allTilesFlat(sets,pair){
+  const tiles=[];
+  sets.forEach(s=>setTiles(s).forEach(t=>tiles.push(t)));
+  if(pair){tiles.push(pair.tile);tiles.push(pair.tile);}
   return tiles;
 }
+function isSuitTile(t){return!!t.suit;}
+function isHonourTile(t){return!!(t.wind||t.drag);}
+function isTerminal(t){return t.suit&&(t.num===1||t.num===9);}
 
-function isSuitTile(t)   { return !!t.suit; }
-function isHonourTile(t) { return !!(t.wind || t.drag); }
-function isTerminal(t)   { return t.suit && (t.num === 1 || t.num === 9); }
-
-function calculate() {
-  const R = []; // result rows: {name, tai, isLimit}
-  clearResults();
-
-  if (S.mode === 'thirteen') {
-    R.push({ name:'Thirteen Wonders (十三幺)', tai: S.limitMax, isLimit: true });
-    addWinRows(R);
-    addFlowerRows(R);
-    addAnimalRows(R);
-    return showResults(R);
+function calculate(){
+  const R=[];clearResults();lastTaiResult=null;
+  if(S.mode==='thirteen'){
+    R.push({name:'Thirteen Wonders (十三幺)',tai:S.limitMax,isLimit:true});
+    addWinRows(R);addFlowerRows(R);addAnimalRows(R);return showResults(R);
   }
-
-  if (S.mode === 'pairs') {
-    if (S.pairs7.length !== 7) return showError(`Seven Pairs needs exactly 7 pairs. You have ${S.pairs7.length}.`);
-    R.push({ name:'Seven Pairs (七對子)', tai: 3 });
-    addWinRows(R);
-    addFlowerRows(R);
-    addAnimalRows(R);
-    return showResults(R);
+  if(S.mode==='pairs'){
+    if(S.pairs7.length!==7)return showError(`Seven Pairs needs exactly 7 pairs. You have ${S.pairs7.length}.`);
+    R.push({name:'Seven Pairs (七對子)',tai:3});
+    addWinRows(R);addFlowerRows(R);addAnimalRows(R);return showResults(R);
   }
-
-  // ── Standard hand ──
-  if (S.sets.length !== 4 || !S.pair)
+  if(S.sets.length!==4||!S.pair)
     return showError(`A standard hand needs 4 sets + 1 pair. You have ${S.sets.length} set(s) and ${S.pair?'1':'no'} pair.`);
-
-  const allTiles = allTilesFlat(S.sets, S.pair);
-
-  // 1. Check limit hands
-  const limit = detectLimit(S.sets, S.pair);
-  if (limit) {
-    R.push({ name: limit, tai: S.limitMax, isLimit: true });
-  } else {
-    // 2. Hand pattern
-    const pat = detectPattern(S.sets, S.pair, allTiles);
-    if (pat) R.push(pat);
-
-    // 3. Per-set bonuses (only for pong/kong)
-    S.sets.filter(s => s.type === 'pong' || s.type === 'kong').forEach(s => {
-      setBonus(s.tile, R);
-    });
+  const allTiles=allTilesFlat(S.sets,S.pair);
+  const limit=detectLimit(S.sets,S.pair);
+  if(limit){R.push({name:limit,tai:S.limitMax,isLimit:true});}
+  else{
+    const pat=detectPattern(S.sets,S.pair,allTiles);
+    if(pat)R.push(pat);
+    S.sets.filter(s=>s.type==='pong'||s.type==='kong').forEach(s=>setBonus(s.tile,R));
   }
-
-  // 4. Win circumstances
-  addWinRows(R);
-
-  // 5. Bonus tiles
-  addFlowerRows(R);
-  addAnimalRows(R);
-
+  addWinRows(R);addFlowerRows(R);addAnimalRows(R);
   showResults(R);
 }
 
-/* ── Limit hand detection ── */
-function detectLimit(sets, pair) {
-  if (S.win.heavenly) return 'Heavenly Win (天糊) — First Draw';
-  if (S.win.earthly)  return 'Earthly Win (地糊) — Second Draw';
-
-  const pongs = sets.filter(s => s.type === 'pong' || s.type === 'kong');
-  const chows = sets.filter(s => s.type === 'chow');
-
-  // Big Three Dragons: 3 dragon pongs
-  const dragonPongs = pongs.filter(s => s.tile.drag).length;
-  if (dragonPongs >= 3) return 'Big Three Dragons (大三元)';
-
-  // Big Four Winds: 4 wind pongs
-  const windPongs = pongs.filter(s => s.tile.wind).length;
-  if (windPongs === 4) return 'Big Four Winds (大四喜)';
-
-  // All Honors: every set + pair is wind or dragon
-  const allTiles = allTilesFlat(sets, pair);
-  if (allTiles.every(isHonourTile)) return 'All Honors (字一色)';
-
-  // All Terminals: only 1s and 9s, all pong
-  const allTermPong = pongs.length === 4 && pongs.every(s => isTerminal(s.tile));
-  const pairTerm    = isTerminal(pair.tile);
-  if (allTermPong && pairTerm && chows.length === 0) return 'All Terminals (清老頭)';
-
-  // Four Concealed Pungs is NOT auto-detected here
-  // (would need to know if sets were exposed — handled via hand description)
-
+function detectLimit(sets,pair){
+  if(S.win.heavenly)return'Heavenly Win (天糊) — First Draw';
+  if(S.win.earthly)return'Earthly Win (地糊) — Second Draw';
+  const pongs=sets.filter(s=>s.type==='pong'||s.type==='kong');
+  const chows=sets.filter(s=>s.type==='chow');
+  if(pongs.filter(s=>s.tile.drag).length>=3)return'Big Three Dragons (大三元)';
+  if(pongs.filter(s=>s.tile.wind).length===4)return'Big Four Winds (大四喜)';
+  const allTiles=allTilesFlat(sets,pair);
+  if(allTiles.every(isHonourTile))return'All Honors (字一色)';
+  if(pongs.length===4&&pongs.every(s=>isTerminal(s.tile))&&isTerminal(pair.tile)&&chows.length===0)
+    return'All Terminals (清老頭)';
   return null;
 }
 
-/* ── Hand pattern ── */
-function detectPattern(sets, pair, allTiles) {
-  const chows = sets.filter(s => s.type === 'chow');
-  const pongs = sets.filter(s => s.type === 'pong' || s.type === 'kong');
-
-  const suits    = new Set(allTiles.filter(isSuitTile).map(t => t.suit));
-  const hasHonor = allTiles.some(isHonourTile);
-
-  // Little Three Dragons: 2 dragon pongs + dragon pair
-  const dragonPongs = pongs.filter(s => s.tile.drag).length;
-  if (dragonPongs === 2 && pair.tile.drag)
-    return { name:'Little Three Dragons (小三元)', tai: 3 };
-
-  // Little Four Winds: 3 wind pongs + wind pair
-  const windPongs = pongs.filter(s => s.tile.wind).length;
-  if (windPongs === 3 && pair.tile.wind)
-    return { name:'Little Four Winds (小四喜)', tai: 2 };
-
-  // All Chow
-  if (chows.length === 4) {
-    const pairIsHonour = isHonourTile(pair.tile);
-    const hasBonus     = (S.useFlowers && S.flowers.size > 0) || (S.useAnimals && S.animals.size > 0);
-    if (!pairIsHonour && !hasBonus)
-      return { name:'All Chow — Ping Wu (平糊, no bonus tiles)', tai: 4 };
-    return { name:'All Chow (平糊)', tai: 1 };
+function detectPattern(sets,pair,allTiles){
+  const chows=sets.filter(s=>s.type==='chow');
+  const pongs=sets.filter(s=>s.type==='pong'||s.type==='kong');
+  const suits=new Set(allTiles.filter(isSuitTile).map(t=>t.suit));
+  const hasHonor=allTiles.some(isHonourTile);
+  if(pongs.filter(s=>s.tile.drag).length===2&&pair.tile.drag)return{name:'Little Three Dragons (小三元)',tai:3};
+  if(pongs.filter(s=>s.tile.wind).length===3&&pair.tile.wind)return{name:'Little Four Winds (小四喜)',tai:2};
+  if(chows.length===4){
+    const hasBonus=(S.useFlowers&&S.flowers.size>0)||(S.useAnimals&&S.animals.size>0);
+    if(!isHonourTile(pair.tile)&&!hasBonus)return{name:'All Chow — Ping Wu (平糊, no bonus tiles)',tai:4};
+    return{name:'All Chow (平糊)',tai:1};
   }
-
-  // All Pong
-  if (pongs.length === 4)
-    return { name:'All Pong (對對糊)', tai: 2 };
-
-  // Pure Suit: one suit, no honors
-  if (suits.size === 1 && !hasHonor)
-    return { name:'Pure Suit (清一色)', tai: 4 };
-
-  // Mixed Suit: one suit + honors
-  if (suits.size === 1 && hasHonor)
-    return { name:'Mixed Suit (混一色)', tai: 2 };
-
-  // Mixed Terminals & Honors: only 1s, 9s, winds, dragons
-  if (allTiles.every(t => isTerminal(t) || isHonourTile(t)))
-    return { name:'Mixed Terminals & Honors (混老頭)', tai: 2 };
-
-  // Half Flush (two suits only, one of which includes honors) - already covered by Mixed Suit above
-  // Multi-suit plain hand: 0 tai base — no pattern bonus
+  if(pongs.length===4)return{name:'All Pong (對對糊)',tai:2};
+  if(suits.size===1&&!hasHonor)return{name:'Pure Suit (清一色)',tai:4};
+  if(suits.size===1&&hasHonor)return{name:'Mixed Suit (混一色)',tai:2};
+  if(allTiles.every(t=>isTerminal(t)||isHonourTile(t)))return{name:'Mixed Terminals & Honors (混老頭)',tai:2};
   return null;
 }
 
-/* ── Per-set bonuses ── */
-function setBonus(tile, R) {
-  if (tile.drag)
-    R.push({ name:`${tile.drag} Dragon Pong/Kong`, tai: 1 });
-  if (tile.wind) {
-    if (tile.wind === S.seat)
-      R.push({ name:`Seat Wind Pong/Kong (${tile.wind})`, tai: 1 });
-    if (tile.wind === S.round)
-      R.push({ name:`Prevailing Wind Pong/Kong (${tile.wind})`, tai: 1 });
+function setBonus(tile,R){
+  if(tile.drag)R.push({name:`${tile.drag} Dragon Pong/Kong`,tai:1});
+  if(tile.wind){
+    if(tile.wind===S.seat)R.push({name:`Seat Wind Pong/Kong (${tile.wind})`,tai:1});
+    if(tile.wind===S.round)R.push({name:`Prevailing Wind Pong/Kong (${tile.wind})`,tai:1});
   }
 }
-
-/* ── Win circumstances ── */
-function addWinRows(R) {
-  if (S.win.selfDraw)    R.push({ name:'Self-Draw (自摸)',       tai: 1 });
-  if (S.win.lastTile)    R.push({ name:'Last Tile Win',          tai: 1 });
-  if (S.win.kongReplace) R.push({ name:'Kong Replacement Win',   tai: 1 });
-  if (S.win.robKong)     R.push({ name:'Robbing the Kong',       tai: 1 });
+function addWinRows(R){
+  if(S.win.selfDraw)R.push({name:'Self-Draw (自摸)',tai:1});
+  if(S.win.lastTile)R.push({name:'Last Tile Win',tai:1});
+  if(S.win.kongReplace)R.push({name:'Kong Replacement Win',tai:1});
+  if(S.win.robKong)R.push({name:'Robbing the Kong',tai:1});
 }
-
-/* ── Flower/season rows ── */
-function addFlowerRows(R) {
-  if (!S.useFlowers || S.flowers.size === 0) return;
-
-  const fl = FLOWERS.filter(f => f.kind === 'flower' && S.flowers.has(f.id));
-  const se = FLOWERS.filter(f => f.kind === 'season' && S.flowers.has(f.id));
-
-  fl.forEach(f => {
-    const star = f.seat === S.seat ? ' ★' : '';
-    R.push({ name:`Flower: ${f.name}${star}`, tai: 1 });
+function addFlowerRows(R){
+  if(!S.useFlowers||S.flowers.size===0)return;
+  FLOWERS.filter(f=>f.kind==='flower'&&S.flowers.has(f.id)).forEach(f=>{
+    R.push({name:`Flower: ${f.name}${f.seat===S.seat?' ★':''}`,tai:1});
   });
-  se.forEach(f => {
-    const star = f.seat === S.seat ? ' ★' : '';
-    R.push({ name:`Season: ${f.name}${star}`, tai: 1 });
+  FLOWERS.filter(f=>f.kind==='season'&&S.flowers.has(f.id)).forEach(f=>{
+    R.push({name:`Season: ${f.name}${f.seat===S.seat?' ★':''}`,tai:1});
   });
-
-  // Complete set bonuses
-  const allFl = FLOWERS.filter(f => f.kind === 'flower');
-  const allSe = FLOWERS.filter(f => f.kind === 'season');
-  if (allFl.every(f => S.flowers.has(f.id)))
-    R.push({ name:'All 4 Flowers Bonus', tai: 1 });
-  if (allSe.every(f => S.flowers.has(f.id)))
-    R.push({ name:'All 4 Seasons Bonus', tai: 1 });
+  if(FLOWERS.filter(f=>f.kind==='flower').every(f=>S.flowers.has(f.id)))R.push({name:'All 4 Flowers Bonus',tai:1});
+  if(FLOWERS.filter(f=>f.kind==='season').every(f=>S.flowers.has(f.id)))R.push({name:'All 4 Seasons Bonus',tai:1});
 }
-
-/* ── Animal rows ── */
-function addAnimalRows(R) {
-  if (!S.useAnimals || S.animals.size === 0) return;
-  ANIMALS.forEach(a => {
-    if (S.animals.has(a.id))
-      R.push({ name:`${a.em} ${a.name}`, tai: 1 });
-  });
-  if (S.animals.size === 4)
-    R.push({ name:'All 4 Animals Bonus', tai: 1 });
+function addAnimalRows(R){
+  if(!S.useAnimals||S.animals.size===0)return;
+  ANIMALS.forEach(a=>{if(S.animals.has(a.id))R.push({name:`${a.em} ${a.name}`,tai:1});});
+  if(S.animals.size===4)R.push({name:'All 4 Animals Bonus',tai:1});
 }
 
 /* ============================================================
    RENDER RESULTS
    ============================================================ */
-function showResults(R) {
-  const total   = R.reduce((s, r) => s + r.tai, 0);
-  const limited = R.some(r => r.isLimit);
-  const area    = document.getElementById('results-area');
-
-  let rows = R.map(r =>
-    `<div class="b-item${r.isLimit?' b-limit':''}">
-      <span class="b-name">${r.isLimit ? '⚡ ' : '✓ '}${r.name}</span>
-      <span class="b-tai">+${r.tai}</span>
-    </div>`
-  ).join('');
-
-  if (R.length > 1) {
-    rows += `<div class="b-div"></div>
-      <div class="b-total-row">
-        <span>Total</span>
-        <span>${total} Tai</span>
-      </div>`;
-  }
-
-  area.innerHTML = `<div class="results">
+function showResults(R){
+  const total=R.reduce((s,r)=>s+r.tai,0);
+  const limited=R.some(r=>r.isLimit);
+  const area=document.getElementById('results-area');
+  let rows=R.map(r=>`<div class="b-item${r.isLimit?' b-limit':''}">
+    <span class="b-name">${r.isLimit?'⚡ ':'✓ '}${r.name}</span>
+    <span class="b-tai">+${r.tai}</span></div>`).join('');
+  if(R.length>1)rows+=`<div class="b-div"></div>
+    <div class="b-total-row"><span>Total</span><span>${total} Tai</span></div>`;
+  area.innerHTML=`<div class="results">
     <div class="result-total">
-      ${limited ? `<div class="result-limit">⚡ Limit Hand</div>` : ''}
+      ${limited?`<div class="result-limit">⚡ Limit Hand</div>`:''}
       <div class="result-num">${total}</div>
       <div class="result-unit">tai</div>
     </div>
     <div class="breakdown">${rows}</div>
   </div>`;
-
-  area.scrollIntoView({ behavior:'smooth', block:'nearest' });
-  incrementCount(); // 🔢 count every successful calculation
+  lastTaiResult={total,rows:R};
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
+  incrementCount();
+  if(ROOM.status==='room')document.getElementById('submit-round-btn').style.display='block';
 }
-
-function showError(msg) {
-  document.getElementById('results-area').innerHTML =
-    `<div class="msg warn">⚠️ ${msg}</div>`;
-}
-function clearResults() {
-  document.getElementById('results-area').innerHTML = '';
+function showError(msg){document.getElementById('results-area').innerHTML=`<div class="msg warn">⚠️ ${msg}</div>`;}
+function clearResults(){
+  document.getElementById('results-area').innerHTML='';
+  lastTaiResult=null;
+  const btn=document.getElementById('submit-round-btn');
+  if(btn)btn.style.display='none';
 }
 
 /* ============================================================
    RESET
    ============================================================ */
-function resetAll() {
-  S.sets   = [];
-  S.pair   = null;
-  S.pairs7 = [];
-  S.flowers.clear();
-  S.animals.clear();
-  S.win = { selfDraw:true, discard:false, lastTile:false,
-             kongReplace:false, robKong:false, heavenly:false, earthly:false };
-  renderHand();
-  renderBonus();
-  renderWinChips();
-  clearResults();
+function resetAll(){
+  S.sets=[];S.pair=null;S.pairs7=[];S.flowers.clear();S.animals.clear();
+  S.win={selfDraw:true,discard:false,lastTile:false,kongReplace:false,robKong:false,heavenly:false,earthly:false};
+  renderHand();renderBonus();renderWinChips();clearResults();
 }
 
 /* ============================================================
    USAGE COUNTER
-   Uses counterapi.dev — free, no auth needed, CORS-enabled.
-   Namespace: mahjong-tai-sg  |  Key: uses
    ============================================================ */
-const COUNTER_URL = 'https://api.counterapi.dev/v1/mahjong-tai-sg/uses';
-
-function loadCount() {
-  fetch(COUNTER_URL, { method: 'GET', cache: 'no-cache' })
-    .then(r => r.json())
-    .then(d => {
-      document.getElementById('usage-count').textContent = (d.count || 0).toLocaleString();
-      document.getElementById('usage-dot').style.background = '#4caf50';
-    })
-    .catch(() => {
-      document.getElementById('usage-count').textContent = '—';
-      document.getElementById('usage-dot').style.background = '#ccc';
+const COUNTER_URL='https://api.counterapi.dev/v1/mahjong-tai-sg/uses';
+function loadCount(){
+  fetch(COUNTER_URL,{method:'GET',cache:'no-cache'})
+    .then(r=>r.json()).then(d=>{
+      document.getElementById('usage-count').textContent=(d.count||0).toLocaleString();
+      document.getElementById('usage-dot').style.background='#4caf50';
+    }).catch(()=>{
+      document.getElementById('usage-count').textContent='—';
+      document.getElementById('usage-dot').style.background='#ccc';
     });
 }
-
-function incrementCount() {
-  fetch(COUNTER_URL + '/up', { method: 'GET', cache: 'no-cache' })
-    .then(r => r.json())
-    .then(d => {
-      document.getElementById('usage-count').textContent = (d.count || 0).toLocaleString();
-      document.getElementById('usage-dot').style.background = '#4caf50';
-    })
-    .catch(() => {}); // silent fail — don't break the app
+function incrementCount(){
+  fetch(COUNTER_URL+'/up',{method:'GET',cache:'no-cache'})
+    .then(r=>r.json()).then(d=>{
+      document.getElementById('usage-count').textContent=(d.count||0).toLocaleString();
+      document.getElementById('usage-dot').style.background='#4caf50';
+    }).catch(()=>{});
 }
 
 /* ============================================================
    INIT
    ============================================================ */
-renderHand();
-renderBonus();
-renderWinChips();
-loadCount(); // show current count on page load
+try{const pid=localStorage.getItem('mj_player_id');if(pid)ROOM.myId=pid;}catch(e){}
+document.getElementById('rate-input').addEventListener('input',updatePaymentTable);
+initFirebase();
+showLanding();
+renderHand();renderBonus();renderWinChips();loadCount();
 </script>
 </body>
 </html>
