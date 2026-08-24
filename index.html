@@ -79,6 +79,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .sc-seat.west{color:#2980b9;}.sc-seat.north{color:#8e44ad;}
 .sc-dealer{font-size:9px;background:#e67e22;color:#fff;border-radius:3px;
   padding:1px 4px;font-weight:700;display:inline-block;margin-top:2px;vertical-align:middle;}
+.room-meta-row{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;gap:8px;}
+.prevailing-label{font-size:11px;color:var(--text-sec);font-weight:600;}
+.prevailing-val{font-size:15px;font-weight:900;margin-left:4px;}
+.prevailing-val.east{color:#e67e22;}.prevailing-val.south{color:#27ae60;}
+.prevailing-val.west{color:#2980b9;}.prevailing-val.north{color:#8e44ad;}
+.rot-group{display:flex;gap:4px;align-items:center;}
+.rot-label{font-size:10px;color:var(--text-sec);font-weight:600;margin-right:2px;}
+.rot-btn{padding:3px 7px;border-radius:5px;border:1px solid var(--border);
+  background:var(--bg);font-size:10px;font-weight:700;cursor:pointer;
+  color:var(--text-sec);transition:all .15s;}
+.rot-btn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
 
 /* ── CONTAINER ── */
 .wrap{max-width:480px;margin:0 auto;padding:14px 14px 0;}
@@ -386,6 +398,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 
 <!-- ══ ROOM BAR ══ -->
 <div id="room-bar" style="display:none">
+  <div class="room-meta-row">
+    <div>
+      <span class="prevailing-label">場風</span>
+      <span class="prevailing-val east" id="prevailing-wind-val">東</span>
+    </div>
+    <div class="rot-group">
+      <span class="rot-label">莊:</span>
+      <button class="rot-btn on" id="rot-traditional" onclick="setRotationMode('traditional')" title="Dealer stays if they win">勝留</button>
+      <button class="rot-btn" id="rot-always" onclick="setRotationMode('always')" title="Always rotate after each round">必轉</button>
+      <button class="rot-btn" id="rot-manual" onclick="setRotationMode('manual')" title="Manual – use 🎲 Seats">手動</button>
+    </div>
+  </div>
   <div class="room-code-row">
     <span class="room-code-label">ROOM</span>
     <span class="room-code-val" id="room-code-display">——</span>
@@ -900,7 +924,8 @@ async function doCreateRoom(playerList) {
     };
   });
   try {
-    await db.ref('rooms/' + code).set({ createdAt: Date.now(), status: 'playing', players });
+    await db.ref('rooms/' + code).set({ createdAt: Date.now(), status: 'playing', players,
+      prevailingWind: 'East', rotationMode: 'traditional', dealerChangeCount: 0 });
     listenRoom(code);
     showApp(true);
     document.getElementById('room-code-display').textContent = code;
@@ -929,14 +954,29 @@ function listenRoom(code) {
     if (!data) return;
     ROOM.players = data.players || {};
     ROOM.rounds  = data.rounds  || {};
-    ROOM.seats   = data.seats   || {};
-    ROOM.dealer  = data.dealer  || null;
+    ROOM.seats           = data.seats           || {};
+    ROOM.dealer          = data.dealer          || null;
+    ROOM.prevailingWind  = data.prevailingWind  || 'East';
+    ROOM.rotationMode    = data.rotationMode    || 'traditional';
+    ROOM.dealerChangeCount = data.dealerChangeCount || 0;
     renderScoreboard();
+    updatePrevailingWindDisplay();
+    // Sync rotation mode buttons
+    ['traditional','always','manual'].forEach(m => {
+      const btn = document.getElementById('rot-' + m);
+      if (btn) btn.classList.toggle('on', m === ROOM.rotationMode);
+    });
     // Auto-sync my seat wind setting
     if (ROOM.seats[ROOM.myId]) {
       S.seat = ROOM.seats[ROOM.myId];
       document.querySelectorAll('#seat-row .wind-btn').forEach(b =>
         b.classList.toggle('on', b.dataset.w === S.seat));
+    }
+    // Auto-sync prevailing wind
+    if (ROOM.prevailingWind) {
+      S.round = ROOM.prevailingWind;
+      document.querySelectorAll('#round-row .wind-btn').forEach(b =>
+        b.classList.toggle('on', b.dataset.w === S.round));
     }
   });
   ROOM._unsub = () => ref.off('value');
@@ -968,9 +1008,59 @@ async function randomiseSeats() {
   ids.forEach((id, i) => { if (i < 4) seats[id] = winds[i]; });
   const dealerId = ids.find(id => seats[id] === 'East') || null;
   try {
-    await db.ref('rooms/' + ROOM.code).update({ seats, dealer: dealerId });
+    await db.ref('rooms/' + ROOM.code).update({
+      seats, dealer: dealerId,
+      prevailingWind: 'East', dealerChangeCount: 0,
+    });
     showToast('Seats randomised! 🎲');
   } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+async function setRotationMode(mode) {
+  try {
+    await db.ref('rooms/' + ROOM.code).update({ rotationMode: mode });
+    // UI update happens via listenRoom
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+function updatePrevailingWindDisplay() {
+  const wind = ROOM.prevailingWind || 'East';
+  const el = document.getElementById('prevailing-wind-val');
+  if (!el) return;
+  el.textContent = SEAT_CH[wind] || '東';
+  el.className = 'prevailing-val ' + wind.toLowerCase();
+}
+
+async function applyDealerRotation(winnerId) {
+  if (!ROOM.dealer || !Object.keys(ROOM.seats).length) return;
+  const mode = ROOM.rotationMode || 'traditional';
+  if (mode === 'manual') return;
+  const dealerWon = winnerId === ROOM.dealer;
+  if (mode === 'traditional' && dealerWon) return; // dealer stays
+  // Rotate winds: South→East, West→South, North→West, East→North
+  const ROTATE = { East:'North', South:'East', West:'South', North:'West' };
+  const newSeats = {};
+  Object.entries(ROOM.seats).forEach(([id, wind]) => {
+    newSeats[id] = ROTATE[wind] || wind;
+  });
+  const newDealer = Object.entries(newSeats).find(([,w]) => w === 'East')?.[0] || null;
+  // Track prevailing wind: advances after all 4 players have held East once
+  const WINDS = ['East','South','West','North'];
+  let prevWind = ROOM.prevailingWind || 'East';
+  let rotCount = (ROOM.dealerChangeCount || 0) + 1;
+  const maxRots = Math.min(Object.keys(ROOM.players).length, 4);
+  if (rotCount >= maxRots) {
+    const nextIdx = (WINDS.indexOf(prevWind) + 1) % 4;
+    prevWind = WINDS[nextIdx];
+    rotCount = 0;
+    showToast('Prevailing wind → ' + (SEAT_CH[prevWind] || prevWind) + ' 🌬️');
+  }
+  try {
+    await db.ref('rooms/' + ROOM.code).update({
+      seats: newSeats, dealer: newDealer,
+      prevailingWind: prevWind, dealerChangeCount: rotCount,
+    });
+  } catch(e) { console.error('Rotation error:', e); }
 }
 
 /* ============================================================
@@ -1144,6 +1234,7 @@ async function confirmSubmitRound() {
     const rKey = db.ref('rooms/' + ROOM.code + '/rounds').push().key;
     updates['rooms/' + ROOM.code + '/rounds/' + rKey] = round;
     await db.ref().update(updates);
+    await applyDealerRotation(submitWinnerId);
     closeSubmitModal(); resetAll();
     showToast('Round saved! ✅');
   } catch(e) { showToast('Error: ' + e.message, true); }
