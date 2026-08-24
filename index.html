@@ -52,9 +52,51 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 
 /* ── HEADER ── */
 .header{background:var(--accent);color:#fff;padding:14px 20px 12px;
-  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(192,57,43,.35);}
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(192,57,43,.35);
+  display:flex;align-items:center;justify-content:space-between;}
+.header-left{flex:1;}
 .header h1{font-size:17px;font-weight:700;letter-spacing:-.3px;}
 .header p{font-size:12px;opacity:.8;margin-top:1px;}
+.guide-btn{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:background .15s;}
+.guide-btn:hover{background:rgba(255,255,255,.28);}
+
+/* ── GUIDE MODAL ── */
+#guide-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.55);
+  display:flex;align-items:flex-end;justify-content:center;}
+#guide-overlay.hide{display:none;}
+#guide-modal{background:var(--card);width:100%;max-width:480px;max-height:88vh;
+  border-radius:20px 20px 0 0;overflow:hidden;display:flex;flex-direction:column;}
+.guide-head{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.guide-head-title{font-size:16px;font-weight:800;}
+.guide-head-sub{font-size:12px;color:var(--text-sec);margin-top:2px;}
+.guide-body{overflow-y:auto;padding:14px 18px 24px;-webkit-overflow-scrolling:touch;}
+.guide-section{margin-bottom:20px;}
+.guide-section-title{font-size:11px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.9px;color:var(--accent);margin-bottom:10px;
+  padding-bottom:5px;border-bottom:2px solid var(--accent-light);}
+.guide-table{width:100%;border-collapse:collapse;font-size:13px;}
+.guide-table th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--text-sec);padding:4px 6px;border-bottom:1px solid var(--border);}
+.guide-table td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top;}
+.guide-table tr:last-child td{border-bottom:none;}
+.guide-table td:last-child{text-align:right;font-weight:800;color:var(--accent);white-space:nowrap;}
+.guide-tai{display:inline-block;background:var(--accent);color:#fff;
+  border-radius:5px;padding:1px 7px;font-size:12px;font-weight:800;}
+.guide-tai.limit{background:#7b1fa2;}
+.guide-tai.gray{background:var(--text-sec);}
+.guide-note{font-size:11px;color:var(--text-sec);margin-top:8px;line-height:1.5;}
+.guide-example{font-size:11px;color:var(--text-sec);margin-top:2px;}
+.guide-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.guide-chip{background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:4px 10px;font-size:12px;font-weight:600;color:var(--text);}
+.guide-pay-box{background:var(--bg);border-radius:10px;padding:12px 14px;margin-top:6px;}
+.guide-pay-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+.guide-pay-row+.guide-pay-row{border-top:1px solid var(--border);}
+.guide-pay-label{color:var(--text-sec);}
+.guide-pay-val{font-weight:700;}
 
 /* ── ROOM BAR ── */
 #room-bar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 14px;}
@@ -392,8 +434,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 
 <!-- ══ HEADER ══ -->
 <div class="header" id="app-header" style="display:none">
-  <h1>🀄 Mahjong Tai Counter</h1>
-  <p id="header-sub">Singapore Style</p>
+  <div class="header-left">
+    <h1>🀄 Mahjong Tai Counter</h1>
+    <p id="header-sub">Singapore Style</p>
+  </div>
+  <button class="guide-btn" onclick="showGuide()">📖 Guide</button>
 </div>
 
 <!-- ══ ROOM BAR ══ -->
@@ -479,6 +524,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
       <button class="chip"    id="c-robKong"     onclick="toggleWin('robKong')">⚡ Rob Kong</button>
       <button class="chip"    id="c-heavenly"    onclick="toggleWin('heavenly')">☀️ Heavenly Win</button>
       <button class="chip"    id="c-earthly"     onclick="toggleWin('earthly')">🌙 Earthly Win</button>
+      <button class="chip"    id="c-concealed"   onclick="toggleWin('concealed')" title="Concealed Hand self-draw bonus (+1, only applies with Self-Draw)">🤫 Concealed</button>
     </div>
   </div>
 
@@ -614,10 +660,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     <div class="submit-section">
       <div class="submit-lbl">Payment</div>
       <div class="rate-row">
-        <span class="rate-label">$ </span>
         <input class="rate-input" id="rate-input" type="number" value="1" min="0.5" step="0.5">
-        <span class="rate-label"> per tai</span>
+        <span class="rate-label"> per tai &nbsp;·&nbsp;</span>
+        <button class="rot-btn on" id="pay-flat" onclick="setPayMode('flat')" title="Flat: points × tai">Flat</button>
+        <button class="rot-btn" id="pay-double" onclick="setPayMode('double')" title="Double: points × 2^tai">Double</button>
       </div>
+      <div id="pay-mode-hint" style="font-size:11px;color:var(--text-sec);margin-top:4px"></div>
       <div class="payment-table" id="payment-table"></div>
     </div>
     <button class="modal-ok" onclick="confirmSubmitRound()">Confirm Round ✓</button>
@@ -684,6 +732,127 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
       <div id="setup-error" style="color:#e74c3c;font-size:12px;margin-top:4px;display:none"></div>
     </div>
     <button class="modal-ok" onclick="saveFirebaseConfig()">Save &amp; Connect →</button>
+  </div>
+</div>
+
+<!-- ══ SCORING GUIDE MODAL ══ -->
+<div id="guide-overlay" class="hide" onclick="if(event.target===this)closeGuide()">
+  <div id="guide-modal">
+    <div class="guide-head">
+      <div>
+        <div class="guide-head-title">🀄 Singapore Mahjong Scoring</div>
+        <div class="guide-head-sub">Quick reference guide</div>
+      </div>
+      <button class="modal-x" onclick="closeGuide()">✕</button>
+    </div>
+    <div class="guide-body">
+
+      <!-- LIMIT HANDS -->
+      <div class="guide-section">
+        <div class="guide-section-title">⚡ Limit Hands — Maximum Tai</div>
+        <table class="guide-table">
+          <tr><th>Hand</th><th></th></tr>
+          <tr><td><strong>Heavenly Win</strong> 天糊<div class="guide-example">Dealer wins on very first draw</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Earthly Win</strong> 地糊<div class="guide-example">Non-dealer wins on first discard</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Big Three Dragons</strong> 大三元<div class="guide-example">Pong/Kong all 3 dragons</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Big Four Winds</strong> 大四喜<div class="guide-example">Pong/Kong all 4 winds</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>All Honors</strong> 字一色<div class="guide-example">Only winds &amp; dragons — no suit tiles</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>All Terminals</strong> 清老頭<div class="guide-example">4× pong/kong of 1s &amp; 9s only</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Thirteen Wonders</strong> 十三幺<div class="guide-example">One each of all 13 terminals &amp; honors + pair</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Nine Gates</strong> 九蓮寶燈<div class="guide-example">Same suit: 1,1,1,2,3,4,5,6,7,8,9,9,9 + duplicate</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+        </table>
+      </div>
+
+      <!-- HAND PATTERNS -->
+      <div class="guide-section">
+        <div class="guide-section-title">🃏 Hand Patterns</div>
+        <table class="guide-table">
+          <tr><th>Hand</th><th>Tai</th></tr>
+          <tr><td><strong>All Chow / Ping Wu</strong> 平糊<div class="guide-example">4 chows + pair (non-honor) — NO bonus tiles</div></td><td><span class="guide-tai">4</span></td></tr>
+          <tr><td><strong>Seven Pairs</strong> 七對子<div class="guide-example">7 different pairs</div></td><td><span class="guide-tai">4</span></td></tr>
+          <tr><td><strong>Pure Suit</strong> 清一色<div class="guide-example">All tiles same suit, no honors</div></td><td><span class="guide-tai">4</span></td></tr>
+          <tr><td><strong>All Pong</strong> 對對糊<div class="guide-example">4× pong/kong + pair</div></td><td><span class="guide-tai">2</span></td></tr>
+          <tr><td><strong>Mixed Suit</strong> 混一色<div class="guide-example">One suit + winds/dragons</div></td><td><span class="guide-tai">2</span></td></tr>
+          <tr><td><strong>Mixed Terminals &amp; Honors</strong> 混老頭<div class="guide-example">All tiles are 1s, 9s, winds, or dragons</div></td><td><span class="guide-tai">2</span></td></tr>
+          <tr><td><strong>Little Four Winds</strong> 小四喜<div class="guide-example">3× pong/kong of winds + wind pair</div></td><td><span class="guide-tai">2</span></td></tr>
+          <tr><td><strong>Little Three Dragons</strong> 小三元<div class="guide-example">2× pong/kong of dragons + dragon pair</div></td><td><span class="guide-tai">3</span></td></tr>
+          <tr><td><strong>All Chow (with bonus)</strong> 平糊<div class="guide-example">4 chows + pair — has bonus tiles</div></td><td><span class="guide-tai">1</span></td></tr>
+        </table>
+      </div>
+
+      <!-- PONG/KONG BONUSES -->
+      <div class="guide-section">
+        <div class="guide-section-title">🐉 Pong / Kong Bonuses (+1 each)</div>
+        <div class="guide-chips">
+          <span class="guide-chip">🔴 Red Dragon pong/kong</span>
+          <span class="guide-chip">🟢 Green Dragon pong/kong</span>
+          <span class="guide-chip">⬜ White Dragon pong/kong</span>
+          <span class="guide-chip">🪟 Seat Wind pong/kong</span>
+          <span class="guide-chip">🌐 Prevailing Wind pong/kong</span>
+          <span class="guide-chip">槓 Each Kong (+1)</span>
+        </div>
+        <div class="guide-note">Seat wind = your own wind. Prevailing wind = current round wind (場風).</div>
+      </div>
+
+      <!-- WIN CONDITIONS -->
+      <div class="guide-section">
+        <div class="guide-section-title">🏆 Win Conditions</div>
+        <table class="guide-table">
+          <tr><th>Condition</th><th>Tai</th></tr>
+          <tr><td><strong>Self-Draw</strong> 自摸</td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Concealed Hand Self-Draw</strong> 門清自摸<div class="guide-example">Fully concealed hand + self-draw</div></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Last Tile Win</strong><div class="guide-example">Last tile in the wall</div></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Kong Replacement</strong><div class="guide-example">Win on the tile drawn after a kong</div></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Rob the Kong</strong><div class="guide-example">Win by stealing a tile added to a melded pong</div></td><td><span class="guide-tai">+1</span></td></tr>
+        </table>
+      </div>
+
+      <!-- BONUS TILES -->
+      <div class="guide-section">
+        <div class="guide-section-title">🌸 Bonus Tiles</div>
+        <table class="guide-table">
+          <tr><th>Tile</th><th>Tai</th></tr>
+          <tr><td><strong>Your Flower / Season</strong><div class="guide-example">Matches your seat number</div></td><td><span class="guide-tai">+2</span></td></tr>
+          <tr><td><strong>Other Flower / Season</strong></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Your Animal</strong><div class="guide-example">Cat=East, Rat=South, Cockerel=West, Centipede=North</div></td><td><span class="guide-tai">+2</span></td></tr>
+          <tr><td><strong>Other Animal</strong></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>All 4 Flowers or All 4 Seasons</strong></td><td><span class="guide-tai">+3 each set</span></td></tr>
+        </table>
+      </div>
+
+      <!-- PAYMENT RULES -->
+      <div class="guide-section">
+        <div class="guide-section-title">💰 Payment Rules</div>
+        <div class="guide-pay-box">
+          <div class="guide-pay-row">
+            <span class="guide-pay-label">🎴 Self-Draw win</span>
+            <span class="guide-pay-val">Each of 3 opponents pays 1×</span>
+          </div>
+          <div class="guide-pay-row">
+            <span class="guide-pay-label">🀆 Discard win</span>
+            <span class="guide-pay-val">Discarder pays 3×</span>
+          </div>
+        </div>
+        <div class="guide-note">Example (Flat, 1pt/tai): 5 tai → Self-Draw each pays 5pts. Discarder pays 15pts.<br>Example (Double, 1pt base): 5 tai → 1 × 2⁵ = 32pts each. Discarder pays 96pts.</div>
+      </div>
+
+      <!-- DEALER ROTATION -->
+      <div class="guide-section">
+        <div class="guide-section-title">🎲 Seat Winds &amp; Dealer</div>
+        <table class="guide-table">
+          <tr><th>Wind</th><th>Role</th></tr>
+          <tr><td>🟠 <strong>East 東</strong></td><td>Dealer (莊家)</td></tr>
+          <tr><td>🟢 <strong>South 南</strong></td><td>Player 2</td></tr>
+          <tr><td>🔵 <strong>West 西</strong></td><td>Player 3</td></tr>
+          <tr><td>🟣 <strong>North 北</strong></td><td>Player 4</td></tr>
+        </table>
+        <div class="guide-note" style="margin-top:10px"><strong>勝留</strong> — Dealer stays if they win, rotates if they lose.<br>
+        <strong>必轉</strong> — Always rotate after each round.<br>
+        <strong>手動</strong> — Use 🎲 Seats button to set manually.<br><br>
+        Prevailing wind (場風) advances every 4 dealer rotations.</div>
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -1133,6 +1302,24 @@ function selectDiscarder(id) {
   renderSubmitChips(); updatePaymentTable();
 }
 
+let payMode = 'flat'; // 'flat' or 'double'
+function setPayMode(m) {
+  payMode = m;
+  document.getElementById('pay-flat').classList.toggle('on', m==='flat');
+  document.getElementById('pay-double').classList.toggle('on', m==='double');
+  const rate = parseFloat(document.getElementById('rate-input').value)||1;
+  const tai = lastTaiResult ? lastTaiResult.total : 0;
+  const hint = m==='double'
+    ? `Double: ${rate} × 2^${tai} = <strong>${(rate * Math.pow(2,tai)).toFixed(2)}</strong> pts`
+    : `Flat: ${rate} × ${tai} tai = <strong>${(rate*tai).toFixed(2)}</strong> pts`;
+  document.getElementById('pay-mode-hint').innerHTML = hint;
+  updatePaymentTable();
+}
+function calcAmt(tai, rate) {
+  return payMode==='double' ? rate * Math.pow(2, tai) : tai * rate;
+}
+function fmtPts(n) { return n % 1 === 0 ? n.toFixed(0) : n.toFixed(2); }
+
 function updatePaymentTable() {
   const tai = lastTaiResult ? lastTaiResult.total : 0;
   const rate = parseFloat(document.getElementById('rate-input').value) || 1;
@@ -1140,46 +1327,51 @@ function updatePaymentTable() {
   const winner = ROOM.players[submitWinnerId];
   const isDiscard = S.win.discard || S.win.robKong;
   const el = document.getElementById('payment-table');
+  // update hint
+  const hint = payMode==='double'
+    ? `Double: ${rate} × 2^${tai} = <strong>${fmtPts(rate * Math.pow(2,tai))}</strong> pts`
+    : `Flat: ${rate} × ${tai} tai = <strong>${fmtPts(rate*tai)}</strong> pts`;
+  document.getElementById('pay-mode-hint').innerHTML = hint;
   if (!winner) { el.innerHTML = '<div style="color:var(--text-sec);font-size:13px">Select a winner above</div>'; return; }
-  const amt = tai * rate;
+  const amt = calcAmt(tai, rate);
   let html = '';
 
   if (isDiscard && submitDiscarderId) {
-    /* ── DISCARD WIN: only the discarder pays, everyone else pays $0 ── */
     const discarder = ROOM.players[submitDiscarderId];
-    // discarder pays 3× (their own share × 3)
     html += `<div class="payment-row">
       <span>💸 <strong>${discarder ? discarder.name : '?'}</strong> (threw the tile)</span>
-      <span style="color:#e74c3c;font-weight:800">−$${(amt*3).toFixed(2)}</span>
+      <span style="color:#e74c3c;font-weight:800">−${fmtPts(amt*3)}</span>
     </div>`;
-    // everyone else pays nothing
     players.filter(([id]) => id !== submitWinnerId && id !== submitDiscarderId).forEach(([, p]) => {
       html += `<div class="payment-row" style="color:var(--text-sec)">
-        <span>${p.name} (did not discard)</span><span>$0</span>
+        <span>${p.name} (did not discard)</span><span>0</span>
       </div>`;
     });
     html += `<div class="payment-row total">
-      <span>🏆 ${winner.name} receives</span><span>+$${(amt*3).toFixed(2)}</span>
+      <span>🏆 ${winner.name} receives</span><span>+${fmtPts(amt*3)}</span>
     </div>`;
+    const formula = payMode==='double'
+      ? `${rate} × 2^${tai} × 3 = <strong>${fmtPts(amt*3)}</strong>`
+      : `${tai} tai × ${rate} × 3 = <strong>${fmtPts(amt*3)}</strong>`;
     html += `<div style="font-size:11px;color:var(--text-sec);margin-top:6px;line-height:1.6">
-      <strong>Discard (胡)</strong> — discarder pays all 3 opponents' shares:<br>
-      ${tai} tai × $${rate} × 3 = <strong>$${(amt*3).toFixed(2)}</strong>
+      <strong>Discard (胡)</strong> — discarder pays all 3 shares:<br>${formula}
     </div>`;
   } else {
-    /* ── SELF-DRAW: every opponent pays the same amount ── */
     const opponents = players.filter(([id]) => id !== submitWinnerId);
     opponents.forEach(([, p]) => {
       html += `<div class="payment-row">
         <span>💸 <strong>${p.name}</strong></span>
-        <span style="color:#e74c3c;font-weight:800">−$${amt.toFixed(2)}</span>
+        <span style="color:#e74c3c;font-weight:800">−${fmtPts(amt)}</span>
       </div>`;
     });
     html += `<div class="payment-row total">
-      <span>🏆 ${winner.name} receives</span><span>+$${(amt * opponents.length).toFixed(2)}</span>
+      <span>🏆 ${winner.name} receives</span><span>+${fmtPts(amt * opponents.length)}</span>
     </div>`;
+    const formula = payMode==='double'
+      ? `${rate} × 2^${tai} = <strong>${fmtPts(amt)}</strong> per person`
+      : `${tai} tai × ${rate} = <strong>${fmtPts(amt)}</strong> per person`;
     html += `<div style="font-size:11px;color:var(--text-sec);margin-top:6px;line-height:1.6">
-      <strong>Self-draw (自摸)</strong> — each of ${opponents.length} opponents pays:<br>
-      ${tai} tai × $${rate} = <strong>$${amt.toFixed(2)}</strong> per person
+      <strong>Self-draw (自摸)</strong> — each of ${opponents.length} opponents pays:<br>${formula}
     </div>`;
   }
 
@@ -1197,7 +1389,7 @@ async function confirmSubmitRound() {
   if (!submitWinnerId) { showToast('Select a winner', true); return; }
   const tai = lastTaiResult.total;
   const rate = parseFloat(document.getElementById('rate-input').value) || 1;
-  const amt = tai * rate;
+  const amt = calcAmt(tai, rate);
   const players = Object.entries(ROOM.players);
   const isDiscard = S.win.discard || S.win.robKong;
   const deltas = {};
@@ -1243,6 +1435,9 @@ async function confirmSubmitRound() {
 /* ============================================================
    HISTORY
    ============================================================ */
+function showGuide(){document.getElementById('guide-overlay').classList.remove('hide');}
+function closeGuide(){document.getElementById('guide-overlay').classList.add('hide');}
+
 function showHistory() {
   const rounds = Object.values(ROOM.rounds).sort((a,b) => (a.roundNum||0) - (b.roundNum||0));
   document.getElementById('history-count').textContent = rounds.length + ' rounds played';
@@ -1307,7 +1502,7 @@ const ANIMALS=[{id:'a1',name:'Cat',em:'🐱'},{id:'a2',name:'Rat',em:'🐭'},{id
    ============================================================ */
 const S = {
   useFlowers:true, useAnimals:true, limitMax:8, seat:'East', round:'East',
-  win:{selfDraw:true,discard:false,lastTile:false,kongReplace:false,robKong:false,heavenly:false,earthly:false},
+  win:{selfDraw:true,discard:false,lastTile:false,kongReplace:false,robKong:false,heavenly:false,earthly:false,concealed:false},
   mode:'standard', sets:[], pair:null, pairs7:[], flowers:new Set(), animals:new Set(),
 };
 let picker={type:null,tile:null};
@@ -1331,7 +1526,7 @@ function toggleWin(key){
   renderWinChips();
 }
 function renderWinChips(){
-  ['discard','selfDraw','lastTile','kongReplace','robKong','heavenly','earthly'].forEach(k=>{
+  ['discard','selfDraw','lastTile','kongReplace','robKong','heavenly','earthly','concealed'].forEach(k=>{
     document.getElementById('c-'+k).classList.toggle('on',!!S.win[k]);
   });
 }
@@ -1588,7 +1783,7 @@ function calculate(){
   }
   if(S.mode==='pairs'){
     if(S.pairs7.length!==7)return showError(`Seven Pairs needs exactly 7 pairs. You have ${S.pairs7.length}.`);
-    R.push({name:'Seven Pairs (七對子)',tai:3});
+    R.push({name:'Seven Pairs (七對子)',tai:4});
     addWinRows(R);addFlowerRows(R);addAnimalRows(R);return showResults(R);
   }
   if(S.sets.length!==4||!S.pair)
@@ -1600,6 +1795,9 @@ function calculate(){
     const pat=detectPattern(S.sets,S.pair,allTiles);
     if(pat)R.push(pat);
     S.sets.filter(s=>s.type==='pong'||s.type==='kong').forEach(s=>setBonus(s.tile,R));
+    // Kong bonus: +1 tai per kong
+    const kongs=S.sets.filter(s=>s.type==='kong');
+    kongs.forEach(s=>R.push({name:'Kong Bonus (槓)',tai:1}));
   }
   addWinRows(R);addFlowerRows(R);addAnimalRows(R);
   showResults(R);
@@ -1616,6 +1814,15 @@ function detectLimit(sets,pair){
   if(allTiles.every(isHonourTile))return'All Honors (字一色)';
   if(pongs.length===4&&pongs.every(s=>isTerminal(s.tile))&&isTerminal(pair.tile)&&chows.length===0)
     return'All Terminals (清老頭)';
+  // Nine Gates (九蓮寶燈): pure suit hand with 1112345678999 + one duplicate
+  {
+    const suits=new Set(allTiles.filter(isSuitTile).map(t=>t.suit));
+    if(allTiles.every(isSuitTile)&&suits.size===1){
+      const vc={};allTiles.forEach(t=>{vc[t.val]=(vc[t.val]||0)+1;});
+      const base={1:3,2:1,3:1,4:1,5:1,6:1,7:1,8:1,9:3};
+      if(Object.keys(base).every(v=>(vc[v]||0)>=base[v]))return'Nine Gates (九蓮寶燈)';
+    }
+  }
   return null;
 }
 
@@ -1650,6 +1857,7 @@ function addWinRows(R){
   if(S.win.lastTile)R.push({name:'Last Tile Win',tai:1});
   if(S.win.kongReplace)R.push({name:'Kong Replacement Win',tai:1});
   if(S.win.robKong)R.push({name:'Robbing the Kong',tai:1});
+  if(S.win.concealed&&S.win.selfDraw)R.push({name:'Concealed Hand Self-Draw (門清自摸)',tai:1});
 }
 function addFlowerRows(R){
   if(!S.useFlowers||S.flowers.size===0)return;
@@ -1706,30 +1914,32 @@ function clearResults(){
    ============================================================ */
 function resetAll(){
   S.sets=[];S.pair=null;S.pairs7=[];S.flowers.clear();S.animals.clear();
-  S.win={selfDraw:true,discard:false,lastTile:false,kongReplace:false,robKong:false,heavenly:false,earthly:false};
+  S.win={selfDraw:true,discard:false,lastTile:false,kongReplace:false,robKong:false,heavenly:false,earthly:false,concealed:false};
   renderHand();renderBonus();renderWinChips();clearResults();
 }
 
 /* ============================================================
    USAGE COUNTER
    ============================================================ */
-const COUNTER_URL='https://api.counterapi.dev/v1/mahjong-tai-sg/uses';
+const COUNTER_REF='counters/calculations';
 function loadCount(){
-  fetch(COUNTER_URL,{method:'GET',cache:'no-cache'})
-    .then(r=>r.json()).then(d=>{
-      document.getElementById('usage-count').textContent=(d.count||0).toLocaleString();
-      document.getElementById('usage-dot').style.background='#4caf50';
-    }).catch(()=>{
-      document.getElementById('usage-count').textContent='—';
-      document.getElementById('usage-dot').style.background='#ccc';
-    });
+  if(!db){document.getElementById('usage-count').textContent='—';return;}
+  db.ref(COUNTER_REF).once('value').then(snap=>{
+    document.getElementById('usage-count').textContent=(snap.val()||0).toLocaleString();
+    document.getElementById('usage-dot').style.background='#4caf50';
+  }).catch(()=>{
+    document.getElementById('usage-count').textContent='—';
+    document.getElementById('usage-dot').style.background='#ccc';
+  });
 }
 function incrementCount(){
-  fetch(COUNTER_URL+'/up',{method:'GET',cache:'no-cache'})
-    .then(r=>r.json()).then(d=>{
-      document.getElementById('usage-count').textContent=(d.count||0).toLocaleString();
+  if(!db)return;
+  db.ref(COUNTER_REF).transaction(v=>(v||0)+1).then(res=>{
+    if(res.committed){
+      document.getElementById('usage-count').textContent=(res.snapshot.val()||0).toLocaleString();
       document.getElementById('usage-dot').style.background='#4caf50';
-    }).catch(()=>{});
+    }
+  }).catch(()=>{});
 }
 
 /* ============================================================
