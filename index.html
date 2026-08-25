@@ -1160,6 +1160,7 @@ function showApp(roomMode) {
   const lmRow = document.getElementById('limit-max-row');
   if (lmRow) lmRow.style.display = gameStyle === 'hk' ? 'none' : '';
   document.getElementById('submit-round-btn').style.display = 'none';
+  buildInlineGrid();buildInline7Grid();
 }
 
 function soloMode() { ROOM.status = 'solo'; showApp(false); }
