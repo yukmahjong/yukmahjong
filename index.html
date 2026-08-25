@@ -397,6 +397,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 /* ── SCOREBOARD TALLY ── */
 .sc-tally{font-size:9px;color:var(--text-sec);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
+/* ── STYLE PICKER ── */
+#style-picker{position:fixed;inset:0;z-index:250;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:24px;}
+.style-inner{width:100%;max-width:380px;text-align:center;}
+.style-choice{display:flex;gap:14px;margin-top:28px;}
+.style-btn{flex:1;padding:22px 10px 18px;border:2.5px solid var(--border);border-radius:18px;
+  background:var(--card);cursor:pointer;transition:all .2s;text-align:center;
+  box-shadow:var(--shadow);}
+.style-btn:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.13);}
+.style-btn.hk-btn:hover{border-color:#c0392b;}
+.style-btn.sg-btn:hover{border-color:#2980b9;}
+.sb-icon{font-size:44px;margin-bottom:10px;}
+.sb-title{font-size:19px;font-weight:800;margin-bottom:6px;}
+.sb-sub{font-size:12px;color:var(--text-sec);line-height:1.55;}
+
 @media(min-width:480px){
   .wrap{padding:16px 0 0;}
   .overlay{align-items:center;}
@@ -406,12 +421,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 </head>
 <body>
 
+<!-- ══ STYLE PICKER ══ -->
+<div id="style-picker">
+  <div class="style-inner">
+    <div class="landing-logo">🀄</div>
+    <div class="landing-title">Mahjong Counter</div>
+    <div class="landing-sub">Choose your scoring style to begin</div>
+    <div class="style-choice">
+      <button class="style-btn hk-btn" onclick="setStyle('hk')">
+        <div class="sb-icon">🏮</div>
+        <div class="sb-title">HK / Faan</div>
+        <div class="sb-sub">Hong Kong Official<br>Min 3 faan · Doubling table</div>
+      </button>
+      <button class="style-btn sg-btn" onclick="setStyle('sg')">
+        <div class="sb-icon">🦁</div>
+        <div class="sb-title">SG / Tai</div>
+        <div class="sb-sub">Singapore Style<br>Flat or Double payment</div>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ LANDING ══ -->
-<div id="landing">
+<div id="landing" style="display:none">
   <div class="landing-inner">
     <div class="landing-logo">🀄</div>
-    <div class="landing-title">Mahjong Tai Counter</div>
-    <div class="landing-sub">Singapore Style · Play Together</div>
+    <div class="landing-title">Mahjong Counter</div>
+    <div class="landing-sub" id="landing-style-label">Singapore Style · Play Together</div>
 
     <button class="lbtn" onclick="showCreateRoom()">🎮 Create Room</button>
 
@@ -428,6 +464,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
       Multiplayer needs Firebase ·
       <a href="#" onclick="showSetupWizard();return false;"
          style="color:var(--accent)">Setup guide →</a>
+    </div>
+    <div style="margin-top:14px">
+      <a href="#" id="change-style-link" onclick="changeStyle();return false;"
+         style="font-size:12px;color:var(--text-sec);text-decoration:underline">
+        🏮 Change scoring style →
+      </a>
     </div>
   </div>
 </div>
@@ -486,10 +528,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
       </div>
       <label class="sw"><input type="checkbox" id="sw-animals" checked><span class="sw-track"></span></label>
     </div>
-    <div class="limit-row">
+    <div class="limit-row" id="limit-max-row">
       <div class="row-text">
         <div class="row-title">Limit Hand Maximum</div>
-        <div class="row-sub">Tai paid for limit hands</div>
+        <div class="row-sub" id="limit-max-sub">Tai paid for limit hands</div>
       </div>
       <input type="number" class="limit-input" id="limit-max" value="8" min="1" max="30">
     </div>
@@ -659,7 +701,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     </div>
     <div class="submit-section">
       <div class="submit-lbl">Payment</div>
-      <div class="rate-row">
+      <div id="sg-payment-options" class="rate-row">
         <input class="rate-input" id="rate-input" type="number" value="1" min="0.5" step="0.5">
         <span class="rate-label"> per tai &nbsp;·&nbsp;</span>
         <button class="rot-btn on" id="pay-flat" onclick="setPayMode('flat')" title="Flat: points × tai">Flat</button>
@@ -745,7 +787,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
       </div>
       <button class="modal-x" onclick="closeGuide()">✕</button>
     </div>
-    <div class="guide-body">
+    <div id="guide-body-sg" class="guide-body">
 
       <!-- LIMIT HANDS -->
       <div class="guide-section">
@@ -852,9 +894,106 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
         Prevailing wind (場風) advances every 4 dealer rotations.</div>
       </div>
 
-    </div>
-  </div>
-</div>
+    </div><!-- end guide-body-sg -->
+
+    <!-- HK GUIDE BODY -->
+    <div id="guide-body-hk" class="guide-body" style="display:none">
+      <div class="guide-section">
+        <div class="guide-section-title">⚡ Limit Hands — 8 Faan (128 pts)</div>
+        <table class="guide-table">
+          <tr><th>Hand</th><th></th></tr>
+          <tr><td><strong>Heavenly Win</strong> 天糊<div class="guide-example">Dealer wins on very first draw</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Earthly Win</strong> 地糊<div class="guide-example">Non-dealer wins on first discard</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Big Three Dragons</strong> 大三元<div class="guide-example">Pong/Kong all 3 dragons</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Big Four Winds</strong> 大四喜<div class="guide-example">Pong/Kong all 4 winds</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>All Honors</strong> 字一色</td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>All Terminals</strong> 清老頭</td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Thirteen Wonders</strong> 十三幺</td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Nine Gates</strong> 九蓮寶燈<div class="guide-example">Same suit: 1,1,1,2,3,4,5,6,7,8,9,9,9 + duplicate</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+        </table>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🃏 Hand Patterns (Faan)</div>
+        <table class="guide-table">
+          <tr><th>Hand</th><th>Faan</th></tr>
+          <tr><td><strong>Pure Suit</strong> 清一色<div class="guide-example">All tiles same suit, no honors</div></td><td><span class="guide-tai">7</span></td></tr>
+          <tr><td><strong>Little Four Winds</strong> 小四喜<div class="guide-example">3× pong/kong of winds + wind pair</div></td><td><span class="guide-tai">6</span></td></tr>
+          <tr><td><strong>Little Three Dragons</strong> 小三元<div class="guide-example">2× pong/kong of dragons + dragon pair</div></td><td><span class="guide-tai">5</span></td></tr>
+          <tr><td><strong>Seven Pairs</strong> 七對子<div class="guide-example">7 different pairs</div></td><td><span class="guide-tai">4</span></td></tr>
+          <tr><td><strong>All Pong</strong> 對對糊</td><td><span class="guide-tai">3</span></td></tr>
+          <tr><td><strong>Mixed Suit</strong> 混一色<div class="guide-example">One suit + winds/dragons</div></td><td><span class="guide-tai">3</span></td></tr>
+          <tr><td><strong>Mixed Terminals &amp; Honors</strong> 混老頭</td><td><span class="guide-tai">3</span></td></tr>
+          <tr><td><strong>All Chow — Ping Wu</strong> 平糊<div class="guide-example">4 chows + non-honor pair, no bonus tiles</div></td><td><span class="guide-tai">3</span></td></tr>
+          <tr><td><strong>All Chow (with bonus tiles)</strong> 平糊<div class="guide-example">4 chows + pair, has bonus tiles</div></td><td><span class="guide-tai">1</span></td></tr>
+        </table>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🐉 Pong / Kong Bonuses (+1 each)</div>
+        <div class="guide-chips">
+          <span class="guide-chip">🔴 Red Dragon pong/kong</span>
+          <span class="guide-chip">🟢 Green Dragon pong/kong</span>
+          <span class="guide-chip">⬜ White Dragon pong/kong</span>
+          <span class="guide-chip">🪟 Seat Wind pong/kong</span>
+          <span class="guide-chip">🌐 Prevailing Wind pong/kong</span>
+          <span class="guide-chip">槓 Each Kong (+1)</span>
+        </div>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🏆 Win Conditions (+Faan)</div>
+        <table class="guide-table">
+          <tr><th>Condition</th><th>Faan</th></tr>
+          <tr><td><strong>Self-Draw</strong> 自摸</td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Concealed Hand Self-Draw</strong> 門清自摸<div class="guide-example">Fully concealed hand + self-draw</div></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Last Tile Win</strong></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Kong Replacement</strong></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Rob the Kong</strong></td><td><span class="guide-tai">+1</span></td></tr>
+        </table>
+        <div class="guide-note" style="color:#c0392b;font-weight:600;margin-top:8px">⚠️ Minimum <strong>3 faan</strong> required to declare a win in HK rules.</div>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🌸 Bonus Tiles</div>
+        <table class="guide-table">
+          <tr><th>Tile</th><th>Faan</th></tr>
+          <tr><td><strong>Your Flower / Season</strong><div class="guide-example">Matches your seat number</div></td><td><span class="guide-tai">+2</span></td></tr>
+          <tr><td><strong>Other Flower / Season</strong></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>Your Animal</strong><div class="guide-example">Cat=East, Rat=South, Cockerel=West, Centipede=North</div></td><td><span class="guide-tai">+2</span></td></tr>
+          <tr><td><strong>Other Animal</strong></td><td><span class="guide-tai">+1</span></td></tr>
+          <tr><td><strong>All 4 Flowers or All 4 Seasons</strong></td><td><span class="guide-tai">+3 each set</span></td></tr>
+        </table>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">💰 HK Payment Table</div>
+        <div class="guide-pay-box">
+          <div class="guide-pay-row"><span class="guide-pay-label">3 faan</span><span class="guide-pay-val">4 pts each</span></div>
+          <div class="guide-pay-row"><span class="guide-pay-label">4 faan</span><span class="guide-pay-val">8 pts each</span></div>
+          <div class="guide-pay-row"><span class="guide-pay-label">5 faan</span><span class="guide-pay-val">16 pts each</span></div>
+          <div class="guide-pay-row"><span class="guide-pay-label">6 faan</span><span class="guide-pay-val">32 pts each</span></div>
+          <div class="guide-pay-row"><span class="guide-pay-label">7 faan</span><span class="guide-pay-val">64 pts each</span></div>
+          <div class="guide-pay-row"><span class="guide-pay-label">8+ faan (Limit)</span><span class="guide-pay-val">128 pts each</span></div>
+        </div>
+        <div class="guide-pay-box" style="margin-top:8px">
+          <div class="guide-pay-row"><span class="guide-pay-label">🎴 Self-Draw</span><span class="guide-pay-val">Each of 3 opponents pays pts</span></div>
+          <div class="guide-pay-row"><span class="guide-pay-label">🀆 Discard</span><span class="guide-pay-val">Discarder pays 3× pts</span></div>
+        </div>
+        <div class="guide-note">Example: 5 faan, self-draw → each pays 16 pts (you receive 48 pts total).<br>Example: 5 faan, discard → discarder pays 48 pts.</div>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🎲 Seat Winds &amp; Dealer</div>
+        <table class="guide-table">
+          <tr><th>Wind</th><th>Role</th></tr>
+          <tr><td>🟠 <strong>East 東</strong></td><td>Dealer (莊家)</td></tr>
+          <tr><td>🟢 <strong>South 南</strong></td><td>Player 2</td></tr>
+          <tr><td>🔵 <strong>West 西</strong></td><td>Player 3</td></tr>
+          <tr><td>🟣 <strong>North 北</strong></td><td>Player 4</td></tr>
+        </table>
+        <div class="guide-note" style="margin-top:10px"><strong>勝留</strong> — Dealer stays if they win, rotates if they lose.<br>
+        <strong>必轉</strong> — Always rotate after each round.<br>
+        <strong>手動</strong> — Use 🎲 Seats button to set manually.</div>
+      </div>
+    </div><!-- end guide-body-hk -->
+
+  </div><!-- end guide-modal -->
+</div><!-- end guide-overlay -->
 
 <!-- Firebase SDK (from gstatic — allowed on GitHub Pages) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -934,7 +1073,14 @@ let lastTaiResult = null;
 /* ============================================================
    NAVIGATION
    ============================================================ */
+function changeStyle() {
+  try { localStorage.removeItem('mj_game_style'); } catch(e) {}
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('style-picker').style.display = 'flex';
+}
+
 function showLanding() {
+  document.getElementById('style-picker').style.display = 'none';
   document.getElementById('landing').style.display = 'flex';
   document.getElementById('app-header').style.display = 'none';
   document.getElementById('room-bar').style.display = 'none';
@@ -947,8 +1093,15 @@ function showApp(roomMode) {
   document.getElementById('app-header').style.display = 'block';
   document.getElementById('app-wrap').style.display = 'block';
   document.getElementById('room-bar').style.display = roomMode ? 'block' : 'none';
+  const styleLbl = gameStyle === 'hk' ? 'Hong Kong Style · Faan' : 'Singapore Style · Tai';
   document.getElementById('header-sub').textContent =
-    roomMode ? 'Singapore Style · Room: ' + ROOM.code : 'Singapore Style';
+    roomMode ? styleLbl + ' · Room: ' + ROOM.code : styleLbl;
+  // Show/hide HK vs SG payment options
+  const sgOpts = document.getElementById('sg-payment-options');
+  if (sgOpts) sgOpts.style.display = gameStyle === 'hk' ? 'none' : '';
+  // Show/hide limit max row
+  const lmRow = document.getElementById('limit-max-row');
+  if (lmRow) lmRow.style.display = gameStyle === 'hk' ? 'none' : '';
   document.getElementById('submit-round-btn').style.display = 'none';
 }
 
@@ -1094,7 +1247,7 @@ async function doCreateRoom(playerList) {
   });
   try {
     await db.ref('rooms/' + code).set({ createdAt: Date.now(), status: 'playing', players,
-      prevailingWind: 'East', rotationMode: 'traditional', dealerChangeCount: 0 });
+      prevailingWind: 'East', rotationMode: 'traditional', dealerChangeCount: 0, gameStyle });
     listenRoom(code);
     showApp(true);
     document.getElementById('room-code-display').textContent = code;
@@ -1128,6 +1281,16 @@ function listenRoom(code) {
     ROOM.prevailingWind  = data.prevailingWind  || 'East';
     ROOM.rotationMode    = data.rotationMode    || 'traditional';
     ROOM.dealerChangeCount = data.dealerChangeCount || 0;
+    // Sync game style from room (non-host players inherit host's choice)
+    if (data.gameStyle && data.gameStyle !== gameStyle) {
+      gameStyle = data.gameStyle;
+      const styleLbl = gameStyle === 'hk' ? 'Hong Kong Style · Faan' : 'Singapore Style · Tai';
+      document.getElementById('header-sub').textContent = styleLbl + ' · Room: ' + ROOM.code;
+      const sgOpts = document.getElementById('sg-payment-options');
+      if (sgOpts) sgOpts.style.display = gameStyle === 'hk' ? 'none' : '';
+      const lmRow = document.getElementById('limit-max-row');
+      if (lmRow) lmRow.style.display = gameStyle === 'hk' ? 'none' : '';
+    }
     renderScoreboard();
     updatePrevailingWindDisplay();
     // Sync rotation mode buttons
@@ -1270,9 +1433,12 @@ let submitWinnerId = null, submitDiscarderId = null;
 
 function openSubmitModal() {
   if (!lastTaiResult) return;
-  document.getElementById('submit-tai-display').textContent = lastTaiResult.total + ' tai counted';
+  document.getElementById('submit-tai-display').textContent = lastTaiResult.total + ' ' + taiUnit() + ' counted';
   submitWinnerId = ROOM.myId;
   submitDiscarderId = null;
+  // Show/hide SG payment options
+  const sgOpts = document.getElementById('sg-payment-options');
+  if (sgOpts) sgOpts.style.display = gameStyle === 'hk' ? 'none' : '';
   renderSubmitChips();
   updatePaymentTable();
   document.getElementById('discard-section').style.display =
@@ -1302,6 +1468,46 @@ function selectDiscarder(id) {
   renderSubmitChips(); updatePaymentTable();
 }
 
+/* ============================================================
+   GAME STYLE (HK / SG)
+   ============================================================ */
+let gameStyle = 'sg'; // 'sg' | 'hk'
+
+const SG_VALUES = {
+  pingWu:4, pingWuBonus:1, sevenPairs:4, pureSuit:4,
+  allPong:2, mixedSuit:2, mixedTerminals:2, littleFourWinds:2, littleThreeDragons:3,
+};
+const HK_VALUES = {
+  pingWu:3, pingWuBonus:1, sevenPairs:4, pureSuit:7,
+  allPong:3, mixedSuit:3, mixedTerminals:3, littleFourWinds:6, littleThreeDragons:5,
+};
+
+function styleVals() { return gameStyle === 'hk' ? HK_VALUES : SG_VALUES; }
+function limitTai()  { return gameStyle === 'hk' ? 8 : S.limitMax; }
+function taiUnit()   { return gameStyle === 'hk' ? 'faan' : 'tai'; }
+
+// HK faan → pts per person (doubling table)
+function hkFaanToPts(faan) {
+  if (faan >= 8) return 128;
+  const t = [0, 0, 2, 4, 8, 16, 32, 64];
+  return t[faan] || 128;
+}
+
+function setStyle(style) {
+  gameStyle = style;
+  try { localStorage.setItem('mj_game_style', style); } catch(e) {}
+  document.getElementById('style-picker').style.display = 'none';
+  document.getElementById('landing').style.display = 'flex';
+  const lbl = style === 'hk' ? '🏮 Hong Kong Style · Faan' : '🦁 Singapore Style · Tai';
+  const lsub = document.getElementById('landing-style-label');
+  if (lsub) lsub.textContent = lbl + ' · Play Together';
+  // Update limit max row
+  const lmRow = document.getElementById('limit-max-row');
+  if (lmRow) lmRow.style.display = style === 'hk' ? 'none' : '';
+  const lmSub = document.getElementById('limit-max-sub');
+  if (lmSub) lmSub.textContent = 'Tai paid for limit hands';
+}
+
 let payMode = 'flat'; // 'flat' or 'double'
 function setPayMode(m) {
   payMode = m;
@@ -1322,19 +1528,30 @@ function fmtPts(n) { return n % 1 === 0 ? n.toFixed(0) : n.toFixed(2); }
 
 function updatePaymentTable() {
   const tai = lastTaiResult ? lastTaiResult.total : 0;
-  const rate = parseFloat(document.getElementById('rate-input').value) || 1;
   const players = Object.entries(ROOM.players);
   const winner = ROOM.players[submitWinnerId];
   const isDiscard = S.win.discard || S.win.robKong;
   const el = document.getElementById('payment-table');
-  // update hint
-  const hint = payMode==='double'
-    ? `Double: ${rate} × 2^${tai} = <strong>${fmtPts(rate * Math.pow(2,tai))}</strong> pts`
-    : `Flat: ${rate} × ${tai} tai = <strong>${fmtPts(rate*tai)}</strong> pts`;
-  document.getElementById('pay-mode-hint').innerHTML = hint;
+  const hintEl = document.getElementById('pay-mode-hint');
+  let amt;
+
+  if (gameStyle === 'hk') {
+    // HK: faan → pts via doubling table
+    amt = hkFaanToPts(tai);
+    if (hintEl) hintEl.innerHTML = `HK Table: ${tai} faan → <strong>${amt}</strong> pts per person`;
+  } else {
+    // SG: use rate input + flat/double toggle
+    const rate = parseFloat(document.getElementById('rate-input').value) || 1;
+    amt = calcAmt(tai, rate);
+    const hint = payMode==='double'
+      ? `Double: ${rate} × 2^${tai} = <strong>${fmtPts(rate * Math.pow(2,tai))}</strong> pts`
+      : `Flat: ${rate} × ${tai} tai = <strong>${fmtPts(rate*tai)}</strong> pts`;
+    if (hintEl) hintEl.innerHTML = hint;
+  }
+
   if (!winner) { el.innerHTML = '<div style="color:var(--text-sec);font-size:13px">Select a winner above</div>'; return; }
-  const amt = calcAmt(tai, rate);
   let html = '';
+  const unit = taiUnit();
 
   if (isDiscard && submitDiscarderId) {
     const discarder = ROOM.players[submitDiscarderId];
@@ -1350,9 +1567,11 @@ function updatePaymentTable() {
     html += `<div class="payment-row total">
       <span>🏆 ${winner.name} receives</span><span>+${fmtPts(amt*3)}</span>
     </div>`;
-    const formula = payMode==='double'
-      ? `${rate} × 2^${tai} × 3 = <strong>${fmtPts(amt*3)}</strong>`
-      : `${tai} tai × ${rate} × 3 = <strong>${fmtPts(amt*3)}</strong>`;
+    const formula = gameStyle === 'hk'
+      ? `${tai} ${unit} → ${amt} pts × 3 = <strong>${fmtPts(amt*3)}</strong>`
+      : (payMode==='double'
+        ? `${parseFloat(document.getElementById('rate-input').value)||1} × 2^${tai} × 3 = <strong>${fmtPts(amt*3)}</strong>`
+        : `${tai} ${unit} × ${parseFloat(document.getElementById('rate-input').value)||1} × 3 = <strong>${fmtPts(amt*3)}</strong>`);
     html += `<div style="font-size:11px;color:var(--text-sec);margin-top:6px;line-height:1.6">
       <strong>Discard (胡)</strong> — discarder pays all 3 shares:<br>${formula}
     </div>`;
@@ -1367,9 +1586,11 @@ function updatePaymentTable() {
     html += `<div class="payment-row total">
       <span>🏆 ${winner.name} receives</span><span>+${fmtPts(amt * opponents.length)}</span>
     </div>`;
-    const formula = payMode==='double'
-      ? `${rate} × 2^${tai} = <strong>${fmtPts(amt)}</strong> per person`
-      : `${tai} tai × ${rate} = <strong>${fmtPts(amt)}</strong> per person`;
+    const formula = gameStyle === 'hk'
+      ? `${tai} ${unit} → ${amt} pts per person`
+      : (payMode==='double'
+        ? `${parseFloat(document.getElementById('rate-input').value)||1} × 2^${tai} = <strong>${fmtPts(amt)}</strong> per person`
+        : `${tai} ${unit} × ${parseFloat(document.getElementById('rate-input').value)||1} = <strong>${fmtPts(amt)}</strong> per person`);
     html += `<div style="font-size:11px;color:var(--text-sec);margin-top:6px;line-height:1.6">
       <strong>Self-draw (自摸)</strong> — each of ${opponents.length} opponents pays:<br>${formula}
     </div>`;
@@ -1389,7 +1610,7 @@ async function confirmSubmitRound() {
   if (!submitWinnerId) { showToast('Select a winner', true); return; }
   const tai = lastTaiResult.total;
   const rate = parseFloat(document.getElementById('rate-input').value) || 1;
-  const amt = calcAmt(tai, rate);
+  const amt = gameStyle === 'hk' ? hkFaanToPts(tai) : calcAmt(tai, rate);
   const players = Object.entries(ROOM.players);
   const isDiscard = S.win.discard || S.win.robKong;
   const deltas = {};
@@ -1411,6 +1632,7 @@ async function confirmSubmitRound() {
     winnerName: ROOM.players[submitWinnerId].name,
     tai, breakdown: lastTaiResult.rows.map(r => r.name).join(', '),
     winType: isXimo ? '自摸 (Ximo)' : '胡 (Hu)',
+    gameStyle, taiUnit: taiUnit(),
     discarderName: submitDiscarderId ? (ROOM.players[submitDiscarderId]||{}).name : null,
     deltas, timestamp: Date.now(),
   };
@@ -1435,7 +1657,17 @@ async function confirmSubmitRound() {
 /* ============================================================
    HISTORY
    ============================================================ */
-function showGuide(){document.getElementById('guide-overlay').classList.remove('hide');}
+function showGuide(){
+  document.getElementById('guide-overlay').classList.remove('hide');
+  // Switch guide content based on style
+  const isSG = gameStyle !== 'hk';
+  document.getElementById('guide-body-sg').style.display = isSG ? '' : 'none';
+  document.getElementById('guide-body-hk').style.display = isSG ? 'none' : '';
+  const titleEl = document.querySelector('.guide-head-title');
+  const subEl   = document.querySelector('.guide-head-sub');
+  if (titleEl) titleEl.textContent = isSG ? '🀄 Singapore Mahjong Scoring' : '🏮 Hong Kong Mahjong Scoring';
+  if (subEl)   subEl.textContent   = isSG ? 'Quick reference guide' : 'Official HK faan system';
+}
 function closeGuide(){document.getElementById('guide-overlay').classList.add('hide');}
 
 function showHistory() {
@@ -1445,7 +1677,7 @@ function showHistory() {
     ? rounds.map(r => `<div class="history-item">
         <div class="history-header">
           <span class="history-winner">🏆 ${r.winnerName}</span>
-          <span class="history-tai">${r.tai} tai</span>
+          <span class="history-tai">${r.tai} ${r.taiUnit||'tai'}</span>
         </div>
         <div class="history-sub">Round ${r.roundNum} · ${r.winType}${r.discarderName?' by '+r.discarderName:''}</div>
         <div class="history-sub" style="margin-top:3px">${r.breakdown}</div>
@@ -1778,28 +2010,33 @@ function isTerminal(t){return t.suit&&(t.num===1||t.num===9);}
 function calculate(){
   const R=[];clearResults();lastTaiResult=null;
   if(S.mode==='thirteen'){
-    R.push({name:'Thirteen Wonders (十三幺)',tai:S.limitMax,isLimit:true});
+    R.push({name:'Thirteen Wonders (十三幺)',tai:limitTai(),isLimit:true});
     addWinRows(R);addFlowerRows(R);addAnimalRows(R);return showResults(R);
   }
   if(S.mode==='pairs'){
     if(S.pairs7.length!==7)return showError(`Seven Pairs needs exactly 7 pairs. You have ${S.pairs7.length}.`);
-    R.push({name:'Seven Pairs (七對子)',tai:4});
+    R.push({name:`Seven Pairs (七對子)`,tai:styleVals().sevenPairs});
     addWinRows(R);addFlowerRows(R);addAnimalRows(R);return showResults(R);
   }
   if(S.sets.length!==4||!S.pair)
     return showError(`A standard hand needs 4 sets + 1 pair. You have ${S.sets.length} set(s) and ${S.pair?'1':'no'} pair.`);
   const allTiles=allTilesFlat(S.sets,S.pair);
   const limit=detectLimit(S.sets,S.pair);
-  if(limit){R.push({name:limit,tai:S.limitMax,isLimit:true});}
+  if(limit){R.push({name:limit,tai:limitTai(),isLimit:true});}
   else{
     const pat=detectPattern(S.sets,S.pair,allTiles);
     if(pat)R.push(pat);
     S.sets.filter(s=>s.type==='pong'||s.type==='kong').forEach(s=>setBonus(s.tile,R));
-    // Kong bonus: +1 tai per kong
+    // Kong bonus: +1 per kong
     const kongs=S.sets.filter(s=>s.type==='kong');
     kongs.forEach(s=>R.push({name:'Kong Bonus (槓)',tai:1}));
   }
   addWinRows(R);addFlowerRows(R);addAnimalRows(R);
+  // HK: minimum 3 faan to win
+  if(gameStyle==='hk'&&!R.some(r=>r.isLimit)){
+    const tot=R.reduce((s,r)=>s+r.tai,0);
+    if(tot<3)return showError(`HK rules require minimum 3 faan to win. You have ${tot} faan — add more scoring tiles.`);
+  }
   showResults(R);
 }
 
@@ -1827,21 +2064,22 @@ function detectLimit(sets,pair){
 }
 
 function detectPattern(sets,pair,allTiles){
+  const V=styleVals();
   const chows=sets.filter(s=>s.type==='chow');
   const pongs=sets.filter(s=>s.type==='pong'||s.type==='kong');
   const suits=new Set(allTiles.filter(isSuitTile).map(t=>t.suit));
   const hasHonor=allTiles.some(isHonourTile);
-  if(pongs.filter(s=>s.tile.drag).length===2&&pair.tile.drag)return{name:'Little Three Dragons (小三元)',tai:3};
-  if(pongs.filter(s=>s.tile.wind).length===3&&pair.tile.wind)return{name:'Little Four Winds (小四喜)',tai:2};
+  if(pongs.filter(s=>s.tile.drag).length===2&&pair.tile.drag)return{name:'Little Three Dragons (小三元)',tai:V.littleThreeDragons};
+  if(pongs.filter(s=>s.tile.wind).length===3&&pair.tile.wind)return{name:'Little Four Winds (小四喜)',tai:V.littleFourWinds};
   if(chows.length===4){
     const hasBonus=(S.useFlowers&&S.flowers.size>0)||(S.useAnimals&&S.animals.size>0);
-    if(!isHonourTile(pair.tile)&&!hasBonus)return{name:'All Chow — Ping Wu (平糊, no bonus tiles)',tai:4};
-    return{name:'All Chow (平糊)',tai:1};
+    if(!isHonourTile(pair.tile)&&!hasBonus)return{name:'All Chow — Ping Wu (平糊, no bonus tiles)',tai:V.pingWu};
+    return{name:'All Chow (平糊)',tai:V.pingWuBonus};
   }
-  if(pongs.length===4)return{name:'All Pong (對對糊)',tai:2};
-  if(suits.size===1&&!hasHonor)return{name:'Pure Suit (清一色)',tai:4};
-  if(suits.size===1&&hasHonor)return{name:'Mixed Suit (混一色)',tai:2};
-  if(allTiles.every(t=>isTerminal(t)||isHonourTile(t)))return{name:'Mixed Terminals & Honors (混老頭)',tai:2};
+  if(pongs.length===4)return{name:'All Pong (對對糊)',tai:V.allPong};
+  if(suits.size===1&&!hasHonor)return{name:'Pure Suit (清一色)',tai:V.pureSuit};
+  if(suits.size===1&&hasHonor)return{name:'Mixed Suit (混一色)',tai:V.mixedSuit};
+  if(allTiles.every(t=>isTerminal(t)||isHonourTile(t)))return{name:'Mixed Terminals & Honors (混老頭)',tai:V.mixedTerminals};
   return null;
 }
 
@@ -1886,13 +2124,14 @@ function showResults(R){
   let rows=R.map(r=>`<div class="b-item${r.isLimit?' b-limit':''}">
     <span class="b-name">${r.isLimit?'⚡ ':'✓ '}${r.name}</span>
     <span class="b-tai">+${r.tai}</span></div>`).join('');
+  const unit=taiUnit();
   if(R.length>1)rows+=`<div class="b-div"></div>
-    <div class="b-total-row"><span>Total</span><span>${total} Tai</span></div>`;
+    <div class="b-total-row"><span>Total</span><span>${total} ${unit.charAt(0).toUpperCase()+unit.slice(1)}</span></div>`;
   area.innerHTML=`<div class="results">
     <div class="result-total">
       ${limited?`<div class="result-limit">⚡ Limit Hand</div>`:''}
       <div class="result-num">${total}</div>
-      <div class="result-unit">tai</div>
+      <div class="result-unit">${unit}</div>
     </div>
     <div class="breakdown">${rows}</div>
   </div>`;
@@ -1948,7 +2187,21 @@ function incrementCount(){
 try{const pid=localStorage.getItem('mj_player_id');if(pid)ROOM.myId=pid;}catch(e){}
 document.getElementById('rate-input').addEventListener('input',updatePaymentTable);
 initFirebase();
-showLanding();
+
+// Check for saved style preference — if found, skip style picker
+(function(){
+  try {
+    const saved = localStorage.getItem('mj_game_style');
+    if (saved === 'hk' || saved === 'sg') {
+      setStyle(saved);
+      return;
+    }
+  } catch(e) {}
+  // No saved style — show style picker
+  document.getElementById('style-picker').style.display = 'flex';
+  document.getElementById('landing').style.display = 'none';
+})();
+
 renderHand();renderBonus();renderWinChips();loadCount();
 </script>
 </body>
