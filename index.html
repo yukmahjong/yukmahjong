@@ -800,7 +800,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
           <tr><td><strong>Big Four Winds</strong> 大四喜<div class="guide-example">Pong/Kong all 4 winds</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
           <tr><td><strong>All Honors</strong> 字一色<div class="guide-example">Only winds &amp; dragons — no suit tiles</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
           <tr><td><strong>All Terminals</strong> 清老頭<div class="guide-example">4× pong/kong of 1s &amp; 9s only</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
-          <tr><td><strong>Thirteen Wonders</strong> 十三幺<div class="guide-example">One each of all 13 terminals &amp; honors + pair</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
+          <tr><td><strong>Thirteen Wonders</strong> 十三幺<div class="guide-example">One each of all 13 terminals &amp; honors + pair</div></td><td><span class="guide-tai">8 TAI</span></td></tr>
           <tr><td><strong>Nine Gates</strong> 九蓮寶燈<div class="guide-example">Same suit: 1,1,1,2,3,4,5,6,7,8,9,9,9 + duplicate</div></td><td><span class="guide-tai limit">LIMIT</span></td></tr>
         </table>
       </div>
@@ -1475,11 +1475,11 @@ let gameStyle = 'sg'; // 'sg' | 'hk'
 
 const SG_VALUES = {
   pingWu:4, pingWuBonus:1, sevenPairs:4, pureSuit:4,
-  allPong:2, mixedSuit:2, mixedTerminals:2, littleFourWinds:2, littleThreeDragons:3,
+  allPong:2, mixedSuit:2, mixedTerminals:2, littleFourWinds:4, littleThreeDragons:3,
 };
 const HK_VALUES = {
-  pingWu:3, pingWuBonus:1, sevenPairs:4, pureSuit:7,
-  allPong:3, mixedSuit:3, mixedTerminals:3, littleFourWinds:6, littleThreeDragons:5,
+  pingWu:3, pingWuBonus:1, sevenPairs:4, pureSuit:6,
+  allPong:3, mixedSuit:3, mixedTerminals:3, littleFourWinds:8, littleThreeDragons:5,
 };
 
 function styleVals() { return gameStyle === 'hk' ? HK_VALUES : SG_VALUES; }
@@ -2010,7 +2010,8 @@ function isTerminal(t){return t.suit&&(t.num===1||t.num===9);}
 function calculate(){
   const R=[];clearResults();lastTaiResult=null;
   if(S.mode==='thirteen'){
-    R.push({name:'Thirteen Wonders (十三幺)',tai:limitTai(),isLimit:true});
+    const thirteenTai = gameStyle==='hk' ? limitTai() : 8;
+    R.push({name:'Thirteen Wonders (十三幺)',tai:thirteenTai,isLimit:gameStyle==='hk'});
     addWinRows(R);addFlowerRows(R);addAnimalRows(R);return showResults(R);
   }
   if(S.mode==='pairs'){
