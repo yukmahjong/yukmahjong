@@ -633,9 +633,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     </div>
     <div id="hand-pairs" style="display:none">
       <div class="sets-list" id="pairs-list"></div>
-      <button class="add-btn add-full" id="btn-pair7" onclick="openPicker('pair7')" style="margin-top:10px">
-        👥 Add Pair &nbsp;<span id="pair7-count" style="font-size:11px;opacity:.7">(0 / 7)</span>
-      </button>
+      <div class="ipl-wrap">
+        <div class="ipl-progress">
+          <div class="ipl-dots" id="ipl7-dots"></div>
+          <div class="ipl-status" id="ipl7-status">Pair 1 of 7 — tap a tile</div>
+        </div>
+        <div class="ipl-staging">
+          <div class="ipl-staged-tiles" id="ipl7-staged-tiles">
+            <span class="ipl-hint">Tap tile below →</span>
+          </div>
+        </div>
+        <div class="ipl-actions">
+          <button class="ipl-btn ipl-pair" id="ip7-pair" onclick="addI7Pair()" disabled>♟ Add Pair &nbsp;<span id="pair7-count" style="font-weight:400;opacity:.8">(0 / 7)</span></button>
+          <button class="ipl-btn ipl-undo" id="ip7-undo" onclick="undoI7Stage()" disabled>✕</button>
+        </div>
+        <div class="ipl-grid-wrap" id="ipl7-grid-wrap"></div>
+      </div>
     </div>
     <div id="hand-thirteen" style="display:none">
       <div class="wonders-info">
@@ -1859,11 +1872,6 @@ function renderStandardHand(){
     html+=`<div class="empty-hint">No pair yet — tap Add Pair below</div>`;
   }
   list.innerHTML=html;
-  const full=S.sets.length>=4;
-  document.getElementById('btn-pong').disabled=full;
-  document.getElementById('btn-kong').disabled=full;
-  document.getElementById('btn-chow').disabled=full;
-  document.getElementById('btn-pair').disabled=!!S.pair;
   updateIButtons();refreshIGrid();
 }
 function renderPairs7Hand(){
@@ -1876,8 +1884,7 @@ function renderPairs7Hand(){
   });
   if(!html)html=`<div class="empty-hint">Add 7 pairs below</div>`;
   list.innerHTML=html;
-  count.textContent=`(${S.pairs7.length} / 7)`;
-  document.getElementById('btn-pair7').disabled=S.pairs7.length>=7;
+  updateI7Buttons();refreshI7Grid();
 }
 function removeSet(i){S.sets.splice(i,1);renderHand();clearResults();inlineStaged=[];renderIStaged();updateIButtons();refreshIGrid();}
 function removePair(){S.pair=null;renderHand();clearResults();updateIButtons();refreshIGrid();}
@@ -2184,6 +2191,123 @@ function refreshIGrid() {
 }
 
 /* ============================================================
+   INLINE PICKER — 7 PAIRS MODE
+   ============================================================ */
+let inlineStaged7 = [];
+
+function buildInline7Grid() {
+  const wrap = document.getElementById('ipl7-grid-wrap');
+  if (!wrap) return;
+  let html = '';
+  Object.entries(SUITS).forEach(([suit, meta]) => {
+    html += `<div class="ipl-sect-lbl">${meta.label}</div><div class="ipl-row">`;
+    for (let n = 1; n <= 9; n++) {
+      const t = {suit, num: n};
+      html += `<div class="tile ${meta.cls} click ipl7-tile" data-tile='${JSON.stringify(t)}'><span class="tn">${n}</span><span class="ts">${meta.ch}</span></div>`;
+    }
+    html += '</div>';
+  });
+  html += `<div class="ipl-sect-lbl">Winds</div><div class="ipl-row ipl-honors">`;
+  WINDS.forEach(w => {
+    const t = {wind: w};
+    html += `<div class="tile t-wind click ipl7-tile" data-tile='${JSON.stringify(t)}'><span class="tn">${WIND_CH[w]}</span></div>`;
+  });
+  html += `</div><div class="ipl-sect-lbl">Dragons</div><div class="ipl-row ipl-honors">`;
+  DRAGONS.forEach(d => {
+    const t = {drag: d.name};
+    html += `<div class="tile ${d.cls} click ipl7-tile" data-tile='${JSON.stringify(t)}'><span class="tn">${d.ch}</span></div>`;
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+  wrap.onclick = e => {
+    const el = e.target.closest('.ipl7-tile.click');
+    if (!el || el.classList.contains('dim')) return;
+    tapI7Tile(JSON.parse(el.dataset.tile));
+  };
+  refreshI7Grid();
+  updateI7Buttons();
+}
+
+function tapI7Tile(tile) {
+  const k = tileKey(tile);
+  if (inlineStaged7.length >= 1 && tileKey(inlineStaged7[0]) !== k) {
+    inlineStaged7 = [];
+  }
+  if (inlineStaged7.length >= 2) return;
+  const usage = getTileUsage();
+  const usedInStage = inlineStaged7.filter(t => tileKey(t) === k).length;
+  if ((usage[k]||0) + usedInStage >= 4) return;
+  inlineStaged7.push(tile);
+  renderI7Staged();
+  updateI7Buttons();
+  refreshI7Grid();
+}
+
+function undoI7Stage() {
+  if (!inlineStaged7.length) return;
+  inlineStaged7.pop();
+  renderI7Staged();
+  updateI7Buttons();
+  refreshI7Grid();
+}
+
+function addI7Pair() {
+  if (inlineStaged7.length < 2 || S.pairs7.length >= 7) return;
+  S.pairs7.push({tile: inlineStaged7[0]});
+  inlineStaged7 = [];
+  renderPairs7Hand();
+  clearResults();
+}
+
+function renderI7Staged() {
+  const el = document.getElementById('ipl7-staged-tiles');
+  if (!el) return;
+  if (!inlineStaged7.length) {
+    el.innerHTML = '<span class="ipl-hint">Tap tile below →</span>';
+    return;
+  }
+  el.innerHTML = inlineStaged7.map(t => makeTileEl(t)).join('');
+}
+
+function updateI7Buttons() {
+  const count = S.pairs7.length;
+  const st = inlineStaged7;
+  const ready = st.length === 2;
+  const p = id => document.getElementById(id);
+  if (p('ip7-pair')) p('ip7-pair').disabled = !ready || count >= 7;
+  if (p('ip7-undo')) p('ip7-undo').disabled = st.length === 0;
+  const cnt = document.getElementById('pair7-count');
+  if (cnt) cnt.textContent = `(${count} / 7)`;
+  const status = document.getElementById('ipl7-status');
+  if (status) {
+    if (count >= 7)       status.textContent = '✅ 7 pairs — press Count Tai';
+    else if (ready)       status.textContent = 'Pair ready ✓';
+    else if (st.length)   status.textContent = 'Tap the same tile again';
+    else                  status.textContent = `Pair ${count+1} of 7 — tap a tile`;
+  }
+  const dots = document.getElementById('ipl7-dots');
+  if (dots) {
+    dots.innerHTML = Array.from({length:7}, (_,i) =>
+      `<div class="ipl-dot${i < count ? ' done pair-d' : ''}"></div>`
+    ).join('');
+  }
+}
+
+function refreshI7Grid() {
+  const usage = getTileUsage();
+  document.querySelectorAll('.ipl7-tile').forEach(el => {
+    const t = JSON.parse(el.dataset.tile);
+    const k = tileKey(t);
+    const usedInStage = inlineStaged7.filter(tt => tileKey(tt) === k).length;
+    const isStaging = inlineStaged7.length > 0 && tileKey(inlineStaged7[0]) === k;
+    const avail = 4 - (usage[k]||0) - usedInStage;
+    const dim = isStaging ? (avail <= 0) : (avail < 2);
+    el.classList.toggle('dim', dim);
+    el.classList.toggle('click', !dim);
+  });
+}
+
+/* ============================================================
    SCORING ENGINE
    ============================================================ */
 function allTilesFlat(sets,pair){
@@ -2344,9 +2468,10 @@ function clearResults(){
 function resetAll(){
   S.sets=[];S.pair=null;S.pairs7=[];S.flowers.clear();S.animals.clear();
   S.win={selfDraw:true,discard:false,lastTile:false,kongReplace:false,robKong:false,heavenly:false,earthly:false,concealed:false};
-  inlineStaged=[];
+  inlineStaged=[];inlineStaged7=[];
   renderHand();renderBonus();renderWinChips();clearResults();
   renderIStaged();updateIButtons();refreshIGrid();
+  renderI7Staged();updateI7Buttons();refreshI7Grid();
 }
 
 /* ============================================================
@@ -2394,7 +2519,7 @@ initFirebase();
   document.getElementById('landing').style.display = 'none';
 })();
 
-renderHand();renderBonus();renderWinChips();loadCount();buildInlineGrid();
+renderHand();renderBonus();renderWinChips();loadCount();buildInlineGrid();buildInline7Grid();
 </script>
 </body>
 </html>
