@@ -17,7 +17,7 @@
   --wind-bg:#f3e5f5;--wind-fg:#6a1b9a;
   --drag-red-bg:#fde8e8;--drag-red-fg:#c62828;
   --drag-grn-bg:#e8f5e9;--drag-grn-fg:#2e7d32;
-  --drag-wht-bg:#f5f5f5;--drag-wht-fg:#546e7a;
+  --drag-wht-bg:#e3f2fd;--drag-wht-fg:#1565c0;
   --flower-bg:#fce4ec;--flower-fg:#ad1457;
   --animal-bg:#e0f7fa;--animal-fg:#00695c;
 }
@@ -204,15 +204,46 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .empty-hint{text-align:center;font-size:13px;color:#bbb;
   padding:12px;border:1.5px dashed #e0e0e0;border-radius:10px;}
 
-/* ── ADD BUTTONS ── */
-.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+/* ── ADD BUTTONS (7-pairs mode only) ── */
 .add-btn{display:flex;align-items:center;justify-content:center;gap:6px;
   padding:11px 8px;border:1.5px dashed var(--border);border-radius:10px;
   background:#fff;cursor:pointer;font-size:13px;font-weight:500;
   color:var(--text-sec);transition:all .15s;}
 .add-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 .add-btn:disabled{opacity:.35;cursor:not-allowed;}
-.add-full{grid-column:span 2;}
+.add-full{width:100%;}
+
+/* ── INLINE PICKER ── */
+.ipl-wrap{margin-top:10px;}
+.ipl-progress{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.ipl-dots{display:flex;gap:3px;}
+.ipl-dot{width:22px;height:4px;border-radius:2px;background:var(--border);transition:background .2s;}
+.ipl-dot.done{background:var(--accent);}
+.ipl-dot.pair-d{background:var(--border);}
+.ipl-dot.pair-d.done{background:#e91e8c;}
+.ipl-status{font-size:12px;color:var(--text-sec);flex:1;text-align:right;}
+.ipl-staging{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:8px 10px;margin-bottom:8px;min-height:54px;
+  display:flex;align-items:center;}
+.ipl-staged-tiles{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.ipl-hint{font-size:12px;color:#bbb;}
+.ipl-actions{display:flex;gap:6px;margin-bottom:10px;}
+.ipl-btn{flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;
+  font-weight:700;cursor:pointer;color:#fff;transition:opacity .15s,transform .1s;}
+.ipl-btn:active:not(:disabled){transform:scale(.94);}
+.ipl-btn:disabled{opacity:.25;cursor:not-allowed;}
+.ipl-pong{background:#e67e22;}
+.ipl-chow{background:#16a085;}
+.ipl-kong{background:#8e44ad;}
+.ipl-pair{background:#e91e8c;}
+.ipl-undo{background:none!important;border:1.5px solid var(--border)!important;
+  color:var(--text-sec)!important;flex:0 0 auto;min-width:38px;font-size:16px;}
+.ipl-grid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.ipl-sect-lbl{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text-sec);margin-bottom:5px;margin-top:10px;}
+.ipl-sect-lbl:first-child{margin-top:0;}
+.ipl-row{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-bottom:2px;}
+.ipl-row.ipl-honors{grid-template-columns:repeat(7,1fr);}
 
 /* ── TILE ── */
 .tile{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -232,7 +263,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .t-wind{background:var(--wind-bg);color:var(--wind-fg);}
 .t-dred{background:var(--drag-red-bg);color:var(--drag-red-fg);}
 .t-dgrn{background:var(--drag-grn-bg);color:var(--drag-grn-fg);}
-.t-dwht{background:var(--drag-wht-bg);color:var(--drag-wht-fg);border:1px solid #d0d0d0;}
+.t-dwht{background:var(--drag-wht-bg);color:var(--drag-wht-fg);}
 .t-flower{background:var(--flower-bg);color:var(--flower-fg);}
 .t-animal{background:var(--animal-bg);color:var(--animal-fg);}
 
@@ -580,11 +611,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     </div>
     <div id="hand-standard">
       <div class="sets-list" id="sets-list"></div>
-      <div class="add-grid">
-        <button class="add-btn" id="btn-pong" onclick="openPicker('pong')">✊ Add Pong</button>
-        <button class="add-btn" id="btn-kong" onclick="openPicker('kong')">✋ Add Kong</button>
-        <button class="add-btn" id="btn-chow" onclick="openPicker('chow')">➡️ Add Chow</button>
-        <button class="add-btn" id="btn-pair" onclick="openPicker('pair')">👥 Add Pair</button>
+      <div class="ipl-wrap">
+        <div class="ipl-progress">
+          <div class="ipl-dots" id="ipl-dots"></div>
+          <div class="ipl-status" id="ipl-status">Tap tiles below to start</div>
+        </div>
+        <div class="ipl-staging">
+          <div class="ipl-staged-tiles" id="ipl-staged-tiles">
+            <span class="ipl-hint">Tap tiles below →</span>
+          </div>
+        </div>
+        <div class="ipl-actions">
+          <button class="ipl-btn ipl-pong" id="ip-pong" onclick="addIMeld('pong')" disabled>✊ Pong</button>
+          <button class="ipl-btn ipl-chow" id="ip-chow" onclick="addIMeld('chow')" disabled>→ Chow</button>
+          <button class="ipl-btn ipl-kong" id="ip-kong" onclick="addIMeld('kong')" disabled>✋ Kong</button>
+          <button class="ipl-btn ipl-pair" id="ip-pair" onclick="addIMeld('pair')" disabled>♟ Pair</button>
+          <button class="ipl-btn ipl-undo" id="ip-undo" onclick="undoIStage()" disabled>✕</button>
+        </div>
+        <div class="ipl-grid-wrap" id="ipl-grid-wrap"></div>
       </div>
     </div>
     <div id="hand-pairs" style="display:none">
@@ -1820,6 +1864,7 @@ function renderStandardHand(){
   document.getElementById('btn-kong').disabled=full;
   document.getElementById('btn-chow').disabled=full;
   document.getElementById('btn-pair').disabled=!!S.pair;
+  updateIButtons();refreshIGrid();
 }
 function renderPairs7Hand(){
   const list=document.getElementById('pairs-list'),count=document.getElementById('pair7-count');
@@ -1834,8 +1879,8 @@ function renderPairs7Hand(){
   count.textContent=`(${S.pairs7.length} / 7)`;
   document.getElementById('btn-pair7').disabled=S.pairs7.length>=7;
 }
-function removeSet(i){S.sets.splice(i,1);renderHand();clearResults();}
-function removePair(){S.pair=null;renderHand();clearResults();}
+function removeSet(i){S.sets.splice(i,1);renderHand();clearResults();inlineStaged=[];renderIStaged();updateIButtons();refreshIGrid();}
+function removePair(){S.pair=null;renderHand();clearResults();updateIButtons();refreshIGrid();}
 function removePair7(i){S.pairs7.splice(i,1);renderPairs7Hand();clearResults();}
 
 /* ============================================================
@@ -1993,6 +2038,150 @@ function closePicker(){
   picker={type:null,tile:null};
 }
 function overlayClick(e){if(e.target===document.getElementById('overlay'))closePicker();}
+
+/* ============================================================
+   INLINE PICKER
+   ============================================================ */
+let inlineStaged = [];
+
+function buildInlineGrid() {
+  const wrap = document.getElementById('ipl-grid-wrap');
+  if (!wrap) return;
+  let html = '';
+  Object.entries(SUITS).forEach(([suit, meta]) => {
+    html += `<div class="ipl-sect-lbl">${meta.label}</div><div class="ipl-row">`;
+    for (let n = 1; n <= 9; n++) {
+      const t = {suit, num: n};
+      html += `<div class="tile ${meta.cls} click ipl-tile" data-tile='${JSON.stringify(t)}'><span class="tn">${n}</span><span class="ts">${meta.ch}</span></div>`;
+    }
+    html += '</div>';
+  });
+  html += `<div class="ipl-sect-lbl">Winds</div><div class="ipl-row ipl-honors">`;
+  WINDS.forEach(w => {
+    const t = {wind: w};
+    html += `<div class="tile t-wind click ipl-tile" data-tile='${JSON.stringify(t)}'><span class="tn">${WIND_CH[w]}</span></div>`;
+  });
+  html += `</div><div class="ipl-sect-lbl">Dragons</div><div class="ipl-row ipl-honors">`;
+  DRAGONS.forEach(d => {
+    const t = {drag: d.name};
+    html += `<div class="tile ${d.cls} click ipl-tile" data-tile='${JSON.stringify(t)}'><span class="tn">${d.ch}</span></div>`;
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+  wrap.onclick = e => {
+    const el = e.target.closest('.ipl-tile.click');
+    if (!el || el.classList.contains('dim')) return;
+    tapITile(JSON.parse(el.dataset.tile));
+  };
+  refreshIGrid();
+  updateIButtons();
+}
+
+function tapITile(tile) {
+  const usage = getTileUsage();
+  const k = tileKey(tile);
+  const usedInStage = inlineStaged.filter(t => tileKey(t) === k).length;
+  if ((usage[k]||0) + usedInStage >= 4) return;
+  inlineStaged.push(tile);
+  renderIStaged();
+  updateIButtons();
+  refreshIGrid();
+}
+
+function undoIStage() {
+  if (!inlineStaged.length) return;
+  inlineStaged.pop();
+  renderIStaged();
+  updateIButtons();
+  refreshIGrid();
+}
+
+function addIMeld(type) {
+  if (type === 'pong') {
+    S.sets.push({type:'pong', tile: inlineStaged[0]});
+  } else if (type === 'kong') {
+    S.sets.push({type:'kong', tile: inlineStaged[0]});
+  } else if (type === 'chow') {
+    const st = inlineStaged.filter(t=>t.suit).sort((a,b)=>a.num-b.num);
+    let start = null;
+    for (let i = 0; i <= st.length-3; i++) {
+      if (st[i+1]&&st[i+2]&&st[i+1].num===st[i].num+1&&st[i+2].num===st[i].num+2&&st[i].suit===st[i+1].suit&&st[i].suit===st[i+2].suit) {
+        start = st[i]; break;
+      }
+    }
+    if (!start) return;
+    S.sets.push({type:'chow', tile: start});
+  } else if (type === 'pair') {
+    S.pair = {tile: inlineStaged[0]};
+  }
+  inlineStaged = [];
+  renderHand();
+  clearResults();
+}
+
+function renderIStaged() {
+  const el = document.getElementById('ipl-staged-tiles');
+  if (!el) return;
+  if (!inlineStaged.length) {
+    el.innerHTML = '<span class="ipl-hint">Tap tiles below →</span>';
+    return;
+  }
+  el.innerHTML = inlineStaged.map(t => makeTileEl(t)).join('');
+}
+
+function updateIButtons() {
+  const sets = S.sets.length;
+  const hasPair = !!S.pair;
+  const full = sets >= 4;
+  const st = inlineStaged;
+  const firstKey = st.length ? tileKey(st[0]) : null;
+  const matchFirst = firstKey ? st.filter(t=>tileKey(t)===firstKey).length : 0;
+  const hasChow = (() => {
+    if (st.length < 3) return false;
+    const sorted = st.filter(t=>t.suit).sort((a,b)=>a.num-b.num);
+    for (let i=0;i<=sorted.length-3;i++) {
+      const a=sorted[i],b=sorted[i+1],c=sorted[i+2];
+      if(b&&c&&b.num===a.num+1&&c.num===a.num+2&&a.suit===b.suit&&a.suit===c.suit) return true;
+    }
+    return false;
+  })();
+  const p = id => document.getElementById(id);
+  if(p('ip-pong')) p('ip-pong').disabled = full || matchFirst < 3;
+  if(p('ip-kong')) p('ip-kong').disabled = full || matchFirst < 4;
+  if(p('ip-chow')) p('ip-chow').disabled = full || !hasChow;
+  if(p('ip-pair')) p('ip-pair').disabled = hasPair || matchFirst < 2;
+  if(p('ip-undo')) p('ip-undo').disabled = st.length === 0;
+  const status = document.getElementById('ipl-status');
+  if (status) {
+    if (sets===4&&hasPair)          status.textContent='✅ Hand complete — press Count Tai';
+    else if (sets===4&&!hasPair)    status.textContent='Now select your pair';
+    else if (!st.length)            status.textContent=`Set ${sets+1} of 4 — tap tiles`;
+    else if (matchFirst>=3)         status.textContent='Pong ready ✓';
+    else if (hasChow)               status.textContent='Chow ready ✓';
+    else if (matchFirst>=4)         status.textContent='Kong ready ✓';
+    else if (hasPair&&sets===4&&matchFirst>=2) status.textContent='Pair ready ✓';
+    else                            status.textContent='Keep selecting...';
+  }
+  const dots = document.getElementById('ipl-dots');
+  if (dots) {
+    let dhtml = '';
+    for (let i=0;i<4;i++) dhtml+=`<div class="ipl-dot${i<sets?' done':''}"></div>`;
+    dhtml+=`<div class="ipl-dot pair-d${hasPair?' done':''}"></div>`;
+    dots.innerHTML = dhtml;
+  }
+}
+
+function refreshIGrid() {
+  const usage = getTileUsage();
+  document.querySelectorAll('.ipl-tile').forEach(el => {
+    const t = JSON.parse(el.dataset.tile);
+    const k = tileKey(t);
+    const usedInStage = inlineStaged.filter(tt => tileKey(tt) === k).length;
+    const avail = 4 - (usage[k]||0) - usedInStage;
+    el.classList.toggle('dim', avail <= 0);
+    el.classList.toggle('click', avail > 0);
+  });
+}
 
 /* ============================================================
    SCORING ENGINE
@@ -2155,7 +2344,9 @@ function clearResults(){
 function resetAll(){
   S.sets=[];S.pair=null;S.pairs7=[];S.flowers.clear();S.animals.clear();
   S.win={selfDraw:true,discard:false,lastTile:false,kongReplace:false,robKong:false,heavenly:false,earthly:false,concealed:false};
+  inlineStaged=[];
   renderHand();renderBonus();renderWinChips();clearResults();
+  renderIStaged();updateIButtons();refreshIGrid();
 }
 
 /* ============================================================
@@ -2203,7 +2394,7 @@ initFirebase();
   document.getElementById('landing').style.display = 'none';
 })();
 
-renderHand();renderBonus();renderWinChips();loadCount();
+renderHand();renderBonus();renderWinChips();loadCount();buildInlineGrid();
 </script>
 </body>
 </html>
