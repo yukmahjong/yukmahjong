@@ -2164,10 +2164,10 @@ function updateIButtons() {
     if (sets===4&&hasPair)          status.textContent='✅ Hand complete — press Count Tai';
     else if (sets===4&&!hasPair)    status.textContent='Now select your pair';
     else if (!st.length)            status.textContent=`Set ${sets+1} of 4 — tap tiles`;
+    else if (matchFirst>=4)         status.textContent='Kong ready ✓';
     else if (matchFirst>=3)         status.textContent='Pong ready ✓';
     else if (hasChow)               status.textContent='Chow ready ✓';
-    else if (matchFirst>=4)         status.textContent='Kong ready ✓';
-    else if (hasPair&&sets===4&&matchFirst>=2) status.textContent='Pair ready ✓';
+    else if (matchFirst>=2)         status.textContent='Pair ready ✓';
     else                            status.textContent='Keep selecting...';
   }
   const dots = document.getElementById('ipl-dots');
